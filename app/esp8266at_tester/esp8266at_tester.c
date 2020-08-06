@@ -13,6 +13,8 @@
 #include <string.h>
 #include <esp8266at.h>
 
+#include "../../source/esp8266at/esp8266at_io.h"
+
 #define ESP8266AT_RECV_BUFFER_SIZE 1500
 
 static uint8_t _recv_buf[ESP8266AT_RECV_BUFFER_SIZE];
@@ -593,7 +595,7 @@ static int cli_echo_client(char *str, int len, void *arg) {
 			printf("\r\n---- Send message ----\r\n");
 			sprintf(msg, "%03lu hello", i);
 			msglen = strlen(msg);
-			err = esp8266at_cmd_at_cipsend((uint8_t *) msg, msglen, _timeoutms);
+			err = esp8266at_cmd_at_cipsend((uint8_t*) msg, msglen, _timeoutms);
 			if (err != ESP8266AT_OK) {
 				break;
 			}
@@ -632,6 +634,13 @@ static int cli_echo_client(char *str, int len, void *arg) {
 		}
 		r = 0;
 	} while (0);
+
+	if (err != ESP8266AT_OK) {
+		read = 0;
+		esp8266at_io_read_timedms(_recv_buf, ESP8266AT_RECV_BUFFER_SIZE, &read, _timeoutms);
+		_recv_buf[read] = 0;
+		printf("\"%s\"\r\n", (char*) _recv_buf);
+	}
 
 	printf("result : %d\r\n", err);
 

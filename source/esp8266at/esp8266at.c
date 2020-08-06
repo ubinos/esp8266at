@@ -55,10 +55,8 @@ esp8266at_err_t esp8266at_init(void) {
 		err = ESP8266AT_OK;
 	} while (0);
 
-	if (err != ESP8266AT_OK)
-	{
-		if (_cmd_mutex != NULL)
-		{
+	if (err != ESP8266AT_OK) {
+		if (_cmd_mutex != NULL) {
 			mutex_delete(&_cmd_mutex);
 		}
 	}
