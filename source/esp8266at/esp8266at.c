@@ -27,13 +27,41 @@
 static char _cmd_buf[ESP8266AT_CMD_BUFFER_SIZE];
 static uint8_t _rsp_buf[ESP8266AT_RSP_BUFFER_SIZE];
 
+static mutex_pt _cmd_mutex = NULL;
+
 static esp8266at_err_t _wait_rsp(char *rsp, uint8_t *buffer, uint32_t length, uint32_t *received, uint32_t timeoutms);
 static esp8266at_err_t _send_cmd_and_wait_rsp(char *cmd, char *rsp, uint32_t timeoutms);
 
 esp8266at_err_t esp8266at_init(void) {
+	int r;
 	esp8266at_err_t err;
 
-	err = esp8266at_io_init();
+	assert(_cmd_mutex == NULL);
+
+	err = ESP8266AT_ERROR;
+
+	do {
+		r = mutex_create(&_cmd_mutex);
+		if (r != 0) {
+			err = ESP8266AT_ERROR;
+			break;
+		}
+
+		err = esp8266at_io_init();
+		if (err != ESP8266AT_OK) {
+			break;
+		}
+
+		err = ESP8266AT_OK;
+	} while (0);
+
+	if (err != ESP8266AT_OK)
+	{
+		if (_cmd_mutex != NULL)
+		{
+			mutex_delete(&_cmd_mutex);
+		}
+	}
 
 	return err;
 }
@@ -41,12 +69,16 @@ esp8266at_err_t esp8266at_init(void) {
 esp8266at_err_t esp8266at_deinit(void) {
 	esp8266at_err_t err;
 
+	assert(_cmd_mutex != NULL);
+
 	err = esp8266at_io_deinit();
+
+	mutex_delete(&_cmd_mutex);
 
 	return err;
 }
 
-static esp8266at_err_t _wait_rsp(char *rsp, uint8_t *buffer, uint32_t length, uint32_t *received, uint32_t timeoutms)  {
+static esp8266at_err_t _wait_rsp(char *rsp, uint8_t *buffer, uint32_t length, uint32_t *received, uint32_t timeoutms) {
 	esp8266at_err_t err;
 	uint32_t read;
 	uint32_t rsp_len;
@@ -119,7 +151,7 @@ static esp8266at_err_t _send_cmd_and_wait_rsp(char *cmd, char *rsp, uint32_t tim
 			break;
 		}
 
-		err = esp8266at_io_write_timedms((uint8_t *) cmd, strlen(cmd), NULL, timeoutms);
+		err = esp8266at_io_write_timedms((uint8_t*) cmd, strlen(cmd), NULL, timeoutms);
 		timeoutms = task_getremainingtimeout();
 		if (err != ESP8266AT_OK) {
 			break;
@@ -136,71 +168,238 @@ static esp8266at_err_t _send_cmd_and_wait_rsp(char *cmd, char *rsp, uint32_t tim
 }
 
 esp8266at_err_t esp8266at_cmd_at_test(uint32_t timeoutms) {
-	return _send_cmd_and_wait_rsp("AT\r\n", "OK\r\n", timeoutms);
+	int r;
+	esp8266at_err_t err;
+
+	r = mutex_lock_timedms(_cmd_mutex, timeoutms);
+	timeoutms = task_getremainingtimeoutms();
+	if (r == UBIK_ERR__TIMEOUT) {
+		return ESP8266AT_TIMEOUT;
+	}
+
+	err = _send_cmd_and_wait_rsp("AT\r\n", "OK\r\n", timeoutms);
+
+	mutex_unlock(_cmd_mutex);
+
+	return err;
 }
 
 esp8266at_err_t esp8266at_cmd_at_rst(uint32_t timeoutms) {
-	return _send_cmd_and_wait_rsp("AT+RST\r\n", "OK\r\n", timeoutms);
+	int r;
+	esp8266at_err_t err;
+
+	r = mutex_lock_timedms(_cmd_mutex, timeoutms);
+	timeoutms = task_getremainingtimeoutms();
+	if (r == UBIK_ERR__TIMEOUT) {
+		return ESP8266AT_TIMEOUT;
+	}
+
+	err = _send_cmd_and_wait_rsp("AT+RST\r\n", "OK\r\n", timeoutms);
+
+	mutex_unlock(_cmd_mutex);
+
+	return err;
 }
 
 esp8266at_err_t esp8266at_cmd_at_gmr(uint32_t timeoutms) {
-	return _send_cmd_and_wait_rsp("AT+GMR\r\n", "OK\r\n", timeoutms);
+	int r;
+	esp8266at_err_t err;
+
+	r = mutex_lock_timedms(_cmd_mutex, timeoutms);
+	timeoutms = task_getremainingtimeoutms();
+	if (r == UBIK_ERR__TIMEOUT) {
+		return ESP8266AT_TIMEOUT;
+	}
+
+	err = _send_cmd_and_wait_rsp("AT+GMR\r\n", "OK\r\n", timeoutms);
+
+	mutex_unlock(_cmd_mutex);
+
+	return err;
 }
 
 esp8266at_err_t esp8266at_cmd_at_e(int is_on, uint32_t timeoutms) {
+	int r;
+	esp8266at_err_t err;
+
+	r = mutex_lock_timedms(_cmd_mutex, timeoutms);
+	timeoutms = task_getremainingtimeoutms();
+	if (r == UBIK_ERR__TIMEOUT) {
+		return ESP8266AT_TIMEOUT;
+	}
+
 	sprintf(_cmd_buf, "ATE%d\r\n", is_on);
-	return _send_cmd_and_wait_rsp(_cmd_buf, "OK\r\n", timeoutms);
+	err = _send_cmd_and_wait_rsp(_cmd_buf, "OK\r\n", timeoutms);
+
+	mutex_unlock(_cmd_mutex);
+
+	return err;
 }
 
 esp8266at_err_t esp8266at_cmd_at_cwmode(int mode, uint32_t timeoutms) {
+	int r;
+	esp8266at_err_t err;
+
+	r = mutex_lock_timedms(_cmd_mutex, timeoutms);
+	timeoutms = task_getremainingtimeoutms();
+	if (r == UBIK_ERR__TIMEOUT) {
+		return ESP8266AT_TIMEOUT;
+	}
+
 	sprintf(_cmd_buf, "AT+CWMODE=%d\r\n", mode);
-	return _send_cmd_and_wait_rsp(_cmd_buf, "OK\r\n", timeoutms);
+	err = _send_cmd_and_wait_rsp(_cmd_buf, "OK\r\n", timeoutms);
+
+	mutex_unlock(_cmd_mutex);
+
+	return err;
 }
 
 esp8266at_err_t esp8266at_cmd_at_cipmux(int mode, uint32_t timeoutms) {
+	int r;
 	esp8266at_err_t err;
+
+	r = mutex_lock_timedms(_cmd_mutex, timeoutms);
+	timeoutms = task_getremainingtimeoutms();
+	if (r == UBIK_ERR__TIMEOUT) {
+		return ESP8266AT_TIMEOUT;
+	}
 
 	sprintf(_cmd_buf, "AT+CIPMUX=%d\r\n", mode);
 	err = _send_cmd_and_wait_rsp(_cmd_buf, "OK\r\n", timeoutms);
+
 	task_sleep(500);
+	if (timeoutms < 500) {
+		timeoutms = 0;
+	} else {
+		timeoutms -= 500;
+	}
+
+	mutex_unlock(_cmd_mutex);
 
 	return err;
 }
 
 esp8266at_err_t esp8266at_cmd_at_cwjap(char *ssid, char *passwd, uint32_t timeoutms) {
+	int r;
+	esp8266at_err_t err;
+
+	r = mutex_lock_timedms(_cmd_mutex, timeoutms);
+	timeoutms = task_getremainingtimeoutms();
+	if (r == UBIK_ERR__TIMEOUT) {
+		return ESP8266AT_TIMEOUT;
+	}
+
 	sprintf(_cmd_buf, "AT+CWJAP=\"%s\",\"%s\"\r\n", ssid, passwd);
-	return _send_cmd_and_wait_rsp(_cmd_buf, "OK\r\n", timeoutms);
+	err = _send_cmd_and_wait_rsp(_cmd_buf, "OK\r\n", timeoutms);
+
+	mutex_unlock(_cmd_mutex);
+
+	return err;
 }
 
 esp8266at_err_t esp8266at_cmd_at_cwqap(uint32_t timeoutms) {
+	int r;
 	esp8266at_err_t err;
 
+	r = mutex_lock_timedms(_cmd_mutex, timeoutms);
+	timeoutms = task_getremainingtimeoutms();
+	if (r == UBIK_ERR__TIMEOUT) {
+		return ESP8266AT_TIMEOUT;
+	}
+
 	task_sleep(500);
+	if (timeoutms < 500) {
+		timeoutms = 0;
+	} else {
+		timeoutms -= 500;
+	}
+
 	err = _send_cmd_and_wait_rsp("AT+CWQAP\r\n", "OK\r\n", timeoutms);
+
+	mutex_unlock(_cmd_mutex);
 
 	return err;
 }
 
 esp8266at_err_t esp8266at_cmd_at_cifsr(uint32_t timeoutms) {
-	return _send_cmd_and_wait_rsp("AT+CIFSR\r\n", "OK\r\n", timeoutms);
+	int r;
+	esp8266at_err_t err;
+
+	r = mutex_lock_timedms(_cmd_mutex, timeoutms);
+	timeoutms = task_getremainingtimeoutms();
+	if (r == UBIK_ERR__TIMEOUT) {
+		return ESP8266AT_TIMEOUT;
+	}
+
+	err = _send_cmd_and_wait_rsp("AT+CIFSR\r\n", "OK\r\n", timeoutms);
+
+	mutex_unlock(_cmd_mutex);
+
+	return err;
 }
 
 esp8266at_err_t esp8266at_cmd_at_cipstart(char *type, char *ip, uint32_t port, uint32_t timeoutms) {
+	int r;
+	esp8266at_err_t err;
+
+	r = mutex_lock_timedms(_cmd_mutex, timeoutms);
+	timeoutms = task_getremainingtimeoutms();
+	if (r == UBIK_ERR__TIMEOUT) {
+		return ESP8266AT_TIMEOUT;
+	}
+
 	sprintf(_cmd_buf, "AT+CIPSTART=\"%s\",\"%s\",%lu\r\n", type, ip, port);
-	return _send_cmd_and_wait_rsp(_cmd_buf, "OK\r\n", timeoutms);
+	err = _send_cmd_and_wait_rsp(_cmd_buf, "OK\r\n", timeoutms);
+
+	mutex_unlock(_cmd_mutex);
+
+	return err;
 }
 
 esp8266at_err_t esp8266at_cmd_at_cipstart_multiple(int id, char *type, char *ip, uint32_t port, uint32_t timeoutms) {
+	int r;
+	esp8266at_err_t err;
+
+	r = mutex_lock_timedms(_cmd_mutex, timeoutms);
+	timeoutms = task_getremainingtimeoutms();
+	if (r == UBIK_ERR__TIMEOUT) {
+		return ESP8266AT_TIMEOUT;
+	}
+
 	sprintf(_cmd_buf, "AT+CIPSTART=%d,\"%s\",\"%s\",%lu\r\n", id, type, ip, port);
-	return _send_cmd_and_wait_rsp(_cmd_buf, "OK\r\n", timeoutms);
+	err = _send_cmd_and_wait_rsp(_cmd_buf, "OK\r\n", timeoutms);
+
+	mutex_unlock(_cmd_mutex);
+
+	return err;
 }
 
 esp8266at_err_t esp8266at_cmd_at_cipclose(uint32_t timeoutms) {
-	return _send_cmd_and_wait_rsp("AT+CIPCLOSE\r\n", "OK\r\n", timeoutms);
+	int r;
+	esp8266at_err_t err;
+
+	r = mutex_lock_timedms(_cmd_mutex, timeoutms);
+	timeoutms = task_getremainingtimeoutms();
+	if (r == UBIK_ERR__TIMEOUT) {
+		return ESP8266AT_TIMEOUT;
+	}
+
+	err = _send_cmd_and_wait_rsp("AT+CIPCLOSE\r\n", "OK\r\n", timeoutms);
+
+	mutex_unlock(_cmd_mutex);
+
+	return err;
 }
 
 esp8266at_err_t esp8266at_cmd_at_cipsend(uint8_t *buffer, uint32_t length, uint32_t timeoutms) {
+	int r;
 	esp8266at_err_t err;
+
+	r = mutex_lock_timedms(_cmd_mutex, timeoutms);
+	timeoutms = task_getremainingtimeoutms();
+	if (r == UBIK_ERR__TIMEOUT) {
+		return ESP8266AT_TIMEOUT;
+	}
 
 	err = ESP8266AT_ERROR;
 
@@ -225,13 +424,22 @@ esp8266at_err_t esp8266at_cmd_at_cipsend(uint8_t *buffer, uint32_t length, uint3
 		}
 	} while (0);
 
+	mutex_unlock(_cmd_mutex);
+
 	return err;
 }
 
 esp8266at_err_t esp8266at_cmd_at_ciprecv(uint8_t *buffer, uint32_t length, uint32_t *received, uint32_t timeoutms) {
+	int r;
 	esp8266at_err_t err;
 	uint32_t read;
 	uint32_t data_len;
+
+	r = mutex_lock_timedms(_cmd_mutex, timeoutms);
+	timeoutms = task_getremainingtimeoutms();
+	if (r == UBIK_ERR__TIMEOUT) {
+		return ESP8266AT_TIMEOUT;
+	}
 
 	err = ESP8266AT_ERROR;
 
@@ -253,7 +461,7 @@ esp8266at_err_t esp8266at_cmd_at_ciprecv(uint8_t *buffer, uint32_t length, uint3
 		}
 
 		_rsp_buf[read] = 0;
-		data_len = atoi((char *) _rsp_buf);
+		data_len = atoi((char*) _rsp_buf);
 
 		err = esp8266at_io_read_timedms(buffer, data_len, &read, timeoutms);
 		timeoutms = task_getremainingtimeout();
@@ -268,7 +476,8 @@ esp8266at_err_t esp8266at_cmd_at_ciprecv(uint8_t *buffer, uint32_t length, uint3
 		err = ESP8266AT_OK;
 	} while (0);
 
+	mutex_unlock(_cmd_mutex);
+
 	return err;
 }
-
 
