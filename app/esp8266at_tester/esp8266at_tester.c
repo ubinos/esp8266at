@@ -13,12 +13,11 @@
 #include <string.h>
 #include <esp8266at.h>
 
-#define ESP8266AT_TESTER_DEFAULT_TIMTOUT_MS 10000
-
 #define ESP8266AT_RECV_BUFFER_SIZE 1500
 
 static uint8_t _recv_buf[ESP8266AT_RECV_BUFFER_SIZE];
-static uint32_t _timeoutms = ESP8266AT_TESTER_DEFAULT_TIMTOUT_MS;
+
+static uint32_t _timeoutms = 10000;
 
 static void rootfunc(void *arg);
 
@@ -631,10 +630,10 @@ static int cli_echo_client(char *str, int len, void *arg) {
 			r = -1;
 			break;
 		}
-
-		printf("result : %d\r\n", err);
 		r = 0;
 	} while (0);
+
+	printf("result : %d\r\n", err);
 
 	return r;
 }

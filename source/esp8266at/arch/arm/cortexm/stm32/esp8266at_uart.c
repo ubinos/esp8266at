@@ -13,6 +13,8 @@
 
 void esp8266at_io_callback(void);
 
+UART_HandleTypeDef _esp8266at_uart;
+
 typedef struct
 {
 	uint8_t data[ESP8266AT_IO_READ_BUFFER_SIZE];
@@ -20,13 +22,11 @@ typedef struct
 	uint16_t tail;
 } _esp8266at_read_buffer_t;
 
-_esp8266at_read_buffer_t _read_buffer;
+static _esp8266at_read_buffer_t _read_buffer;
 
-UART_HandleTypeDef _esp8266at_uart;
+static sem_pt _read_sem = NULL;
 
-sem_pt _read_sem = NULL;
-
-mutex_pt _io_mutex = NULL;
+static mutex_pt _io_mutex = NULL;
 
 esp8266at_err_t esp8266at_io_init(void)
 {
@@ -96,15 +96,19 @@ esp8266at_err_t esp8266at_io_init(void)
 
 esp8266at_err_t esp8266at_io_deinit(void)
 {
+	esp8266at_err_t err = ESP8266AT_OK;
+
 	assert(_read_sem != NULL);
 	assert(_io_mutex != NULL);
 
-	HAL_UART_DeInit(&_esp8266at_uart);
+	if (HAL_UART_DeInit(&_esp8266at_uart) != HAL_OK) {
+		err = ESP8266AT_ERROR;
+	}
 
 	mutex_delete(&_io_mutex);
 	sem_delete(&_read_sem);
 
-	return ESP8266AT_OK;
+	return err;
 }
 
 esp8266at_err_t esp8266at_io_read_clear(void)
@@ -162,7 +166,6 @@ esp8266at_err_t esp8266at_io_read_advan(uint8_t *buffer, uint32_t length, uint32
 	esp8266at_err_t err;
 	uint32_t read_tmp;
 	int is_first;
-	int is_sem_taken;
 
 	assert(buffer != NULL);
 
@@ -186,7 +189,6 @@ esp8266at_err_t esp8266at_io_read_advan(uint8_t *buffer, uint32_t length, uint32
 
 	read_tmp = 0;
 	is_first = 1;
-	is_sem_taken = 0;
 	err = ESP8266AT_IO_ERROR;
 
 	while (read_tmp < length)
@@ -195,6 +197,7 @@ esp8266at_err_t esp8266at_io_read_advan(uint8_t *buffer, uint32_t length, uint32
 		{
 			buffer[read_tmp] = _read_buffer.data[_read_buffer.head];
 			_read_buffer.head = (_read_buffer.head + 1) % ESP8266AT_IO_READ_BUFFER_SIZE;
+
 			read_tmp++;
 		}
 		else
@@ -208,16 +211,10 @@ esp8266at_err_t esp8266at_io_read_advan(uint8_t *buffer, uint32_t length, uint32
 				}
 				r = sem_take_timedms(_read_sem, timeoutms);
 				timeoutms = task_getremainingtimeoutms();
-				if (r == 0) {
-					is_sem_taken = 1;
-				}
 			}
 			else
 			{
 				r = sem_take(_read_sem);
-				if (r == 0) {
-					is_sem_taken = 1;
-				}
 			}
 		}
 
@@ -225,11 +222,6 @@ esp8266at_err_t esp8266at_io_read_advan(uint8_t *buffer, uint32_t length, uint32
 		{
 			is_first = 0;
 		}
-	}
-
-	if (is_sem_taken == 1 && _read_buffer.head != _read_buffer.tail)
-	{
-		sem_give(_read_sem);
 	}
 
 	if (read != NULL)
@@ -328,14 +320,8 @@ void esp8266at_io_callback(void)
 
 	if (HAL_UART_Receive_IT(&_esp8266at_uart, &_read_buffer.data[tail], 1) == HAL_OK)
 	{
-		if (_read_buffer.tail == _read_buffer.head) {
-			_read_buffer.tail = tail;
-			sem_give(_read_sem);
-		}
-		else {
-			_read_buffer.tail = tail;
-
-		}
+		_read_buffer.tail = tail;
+		sem_give(_read_sem);
 	}
 }
 
