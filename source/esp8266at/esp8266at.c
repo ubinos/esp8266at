@@ -97,7 +97,7 @@ static esp8266at_err_t _wait_rsp(char *rsp, uint8_t *buffer, uint32_t length, ui
 		buf_i = 0;
 		while ((rsp_i < rsp_len) && (buf_i < length)) {
 			err = esp8266at_io_read_timedms(&buffer[buf_i], 1, &read, timeoutms);
-			timeoutms = task_getremainingtimeout();
+			timeoutms = task_getremainingtimeoutms();
 			if (err != ESP8266AT_OK) {
 				break;
 			}
@@ -144,19 +144,19 @@ static esp8266at_err_t _send_cmd_and_wait_rsp(char *cmd, char *rsp, uint32_t tim
 		esp8266at_debugf("expect  : \"%s\"\r\n", rsp);
 
 		err = esp8266at_io_read_clear_timedms(timeoutms);
-		timeoutms = task_getremainingtimeout();
+		timeoutms = task_getremainingtimeoutms();
 		if (err != ESP8266AT_OK) {
 			break;
 		}
 
 		err = esp8266at_io_write_timedms((uint8_t*) cmd, strlen(cmd), NULL, timeoutms);
-		timeoutms = task_getremainingtimeout();
+		timeoutms = task_getremainingtimeoutms();
 		if (err != ESP8266AT_OK) {
 			break;
 		}
 
 		err = _wait_rsp(rsp, _rsp_buf, ESP8266AT_RSP_BUFFER_SIZE, NULL, timeoutms);
-		timeoutms = task_getremainingtimeout();
+		timeoutms = task_getremainingtimeoutms();
 		if (err != ESP8266AT_OK) {
 			break;
 		}
@@ -404,19 +404,19 @@ esp8266at_err_t esp8266at_cmd_at_cipsend(uint8_t *buffer, uint32_t length, uint3
 	do {
 		sprintf(_cmd_buf, "AT+CIPSEND=%lu\r\n", length);
 		err = _send_cmd_and_wait_rsp(_cmd_buf, "OK\r\n>", timeoutms);
-		timeoutms = task_getremainingtimeout();
+		timeoutms = task_getremainingtimeoutms();
 		if (err != ESP8266AT_OK) {
 			break;
 		}
 
 		err = esp8266at_io_write_timedms(buffer, length, NULL, timeoutms);
-		timeoutms = task_getremainingtimeout();
+		timeoutms = task_getremainingtimeoutms();
 		if (err != ESP8266AT_OK) {
 			break;
 		}
 
 		err = _wait_rsp("SEND OK\r\n", _rsp_buf, ESP8266AT_RSP_BUFFER_SIZE, NULL, timeoutms);
-		timeoutms = task_getremainingtimeout();
+		timeoutms = task_getremainingtimeoutms();
 		if (err != ESP8266AT_OK) {
 			break;
 		}
@@ -447,13 +447,13 @@ esp8266at_err_t esp8266at_cmd_at_ciprecv(uint8_t *buffer, uint32_t length, uint3
 		}
 
 		err = _wait_rsp("+IPD,", _rsp_buf, ESP8266AT_RSP_BUFFER_SIZE, NULL, timeoutms);
-		timeoutms = task_getremainingtimeout();
+		timeoutms = task_getremainingtimeoutms();
 		if (err != ESP8266AT_OK) {
 			break;
 		}
 
 		err = _wait_rsp(":", _rsp_buf, ESP8266AT_RSP_BUFFER_SIZE, &read, timeoutms);
-		timeoutms = task_getremainingtimeout();
+		timeoutms = task_getremainingtimeoutms();
 		if (err != ESP8266AT_OK) {
 			break;
 		}
@@ -462,7 +462,7 @@ esp8266at_err_t esp8266at_cmd_at_ciprecv(uint8_t *buffer, uint32_t length, uint3
 		data_len = atoi((char*) _rsp_buf);
 
 		err = esp8266at_io_read_timedms(buffer, data_len, &read, timeoutms);
-		timeoutms = task_getremainingtimeout();
+		timeoutms = task_getremainingtimeoutms();
 		if (err != ESP8266AT_OK && err != ESP8266AT_TIMEOUT) {
 			break;
 		}
