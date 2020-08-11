@@ -260,12 +260,18 @@ esp8266at_err_t esp8266at_io_write_advan(uint8_t *buffer, uint32_t length, uint3
 
 void esp8266at_io_callback(void) {
 	uint16_t tail;
+	int need_signal = 0;
 
 	tail = (_read_buffer.tail + 1) % ESP8266AT_IO_READ_BUFFER_SIZE;
 
 	if (HAL_UART_Receive_IT(&_esp8266at_uart, &_read_buffer.data[tail], 1) == HAL_OK) {
+		if (_read_buffer.tail == _read_buffer.head) {
+			need_signal = 1;
+		}
 		_read_buffer.tail = tail;
-		sem_give(_read_sem);
+		if (need_signal) {
+			sem_give(_read_sem);
+		}
 	}
 }
 
