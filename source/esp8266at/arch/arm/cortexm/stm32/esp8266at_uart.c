@@ -71,7 +71,9 @@ esp8266at_err_t esp8266at_io_init(void) {
 		HAL_UART_Receive_IT(&_esp8266at_uart, &_read_buffer.data[0], 1);
 
 		err = ESP8266AT_OK;
-	} while (0);
+
+		break;
+	} while (1);
 
 	if (err != ESP8266AT_OK) {
 		if (_io_mutex != NULL) {
@@ -229,7 +231,7 @@ esp8266at_err_t esp8266at_io_write_advan(uint8_t *buffer, uint32_t length, uint3
 		return ESP8266AT_ERROR;
 	}
 
-	while (1) {
+	for (;;) {
 		status = HAL_UART_Transmit(&_esp8266at_uart, buffer, length, timeoutms);
 
 		if (status == HAL_TIMEOUT) {

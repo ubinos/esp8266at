@@ -56,7 +56,7 @@ int appmain(int argc, char *argv[]) {
 
 	r = task_create(NULL, rootfunc, NULL, task_getmiddlepriority(), 0, "root");
 	if (0 != r) {
-		logme("fail at task_create\r\n");
+		logme("fail at task_create");
 	}
 
 	ubik_comp_start();
@@ -71,32 +71,32 @@ static void rootfunc(void *arg) {
 
 	esp8266at_init();
 
-	printf("\n\n\r\n");
-	printf("================================================================================\r\n");
-	printf("esp8266at_tester (build time: %s %s)\r\n", __TIME__, __DATE__);
-	printf("================================================================================\r\n");
-	printf("\r\n");
+	printf("\n\n\n");
+	printf("================================================================================\n");
+	printf("esp8266at_tester (build time: %s %s)\n", __TIME__, __DATE__);
+	printf("================================================================================\n");
+	printf("\n");
 
-	dtty_setecho(1);
+	logm_setlevel(LOGM_CATEGORY__USER00, LOGM_LEVEL__DEBUG);
 
 	r = cli_sethookfunc(clihookfunc, NULL);
 	if (0 != r) {
-		logme("fail at cli_sethookfunc\r\n");
+		logme("fail at cli_sethookfunc");
 	}
 
 	r = cli_sethelphookfunc(clihelphookfunc);
 	if (0 != r) {
-		logme("fail at cli_sethelphookfunc\r\n");
+		logme("fail at cli_sethelphookfunc");
 	}
 
 	r = cli_setprompt("esp8266at_tester> ");
 	if (0 != r) {
-		logme("fail at cli_setprompt\r\n");
+		logme("fail at cli_setprompt");
 	}
 
 	r = task_create(NULL, cli_main, NULL, task_getmiddlepriority(), 192, "cli_main");
 	if (0 != r) {
-		logme("fail at task_create\r\n");
+		logme("fail at task_create");
 	}
 }
 
@@ -141,30 +141,31 @@ static int clihookfunc(char *str, int len, void *arg) {
 			r = 0;
 			break;
 		}
-	} while (0);
+
+		break;
+	} while (1);
 
 	return r;
 }
 
 static void clihelphookfunc() {
-	printf("\r\n");
-	printf("at test                          : Tests AT startup\r\n");
-	printf("at restart                       : Restarts a module\r\n");
-	printf("at version                       : Query version information\r\n");
-	printf("at config echo <on|off>          : Config echo\r\n");
-	printf("at config wmode <mode>           : Config WiFi mode\r\n");
-	printf("at config ipmux <mode>           : Config IP multiple connection mode\r\n");
-	printf("at ap join <ssid> <passwd>       : Join to an AP\r\n");
-	printf("at ap quit                       : Quit from the AP\r\n");
-	printf("at ip                            : Query local IP\r\n");
-	printf("at conn open <type> <ip> <port>  : Open connection\r\n");
-	printf("at conn close                    : Close connection\r\n");
-	printf("at conn send <data>              : Send data\r\n");
-	printf("at conn recv                     : Receive data\r\n");
-	printf("\r\n");
-	printf("echo client <ssid> <passwd> <ip> <port> <count> : echo client test\r\n");
-	printf("\r\n");
-	printf("echo client2\r\n");
+	printf("at test                          : Tests AT startup\n");
+	printf("at restart                       : Restarts a module\n");
+	printf("at version                       : Query version information\n");
+	printf("at config echo <on|off>          : Config echo\n");
+	printf("at config wmode <mode>           : Config WiFi mode\n");
+	printf("at config ipmux <mode>           : Config IP multiple connection mode\n");
+	printf("at ap join <ssid> <passwd>       : Join to an AP\n");
+	printf("at ap quit                       : Quit from the AP\n");
+	printf("at ip                            : Query local IP\n");
+	printf("at conn open <type> <ip> <port>  : Open connection\n");
+	printf("at conn close                    : Close connection\n");
+	printf("at conn send <data>              : Send data\n");
+	printf("at conn recv                     : Receive data\n");
+	printf("\n");
+	printf("echo client <ssid> <passwd> <ip> <port> <count> : echo client test\n");
+	printf("\n");
+	printf("echo client2\n");
 }
 
 static int cli_at(char *str, int len, void *arg) {
@@ -247,7 +248,9 @@ static int cli_at(char *str, int len, void *arg) {
 			r = cli_at_conn(tmpstr, tmplen, arg);
 			break;
 		}
-	} while (0);
+
+		break;
+	} while (1);
 
 	return r;
 }
@@ -256,21 +259,21 @@ static void cli_at_test() {
 	esp8266at_err_t err;
 
 	err = esp8266at_cmd_at_test(_timeoutms);
-	printf("result : %d\r\n", err);
+	printf("result : %d\n", err);
 }
 
 static void cli_at_restart() {
 	esp8266at_err_t err;
 
 	err = esp8266at_cmd_at_rst(_timeoutms);
-	printf("result : %d\r\n", err);
+	printf("result : %d\n", err);
 }
 
 static void cli_at_query_version() {
 	esp8266at_err_t err;
 
 	err = esp8266at_cmd_at_gmr(_timeoutms);
-	printf("result : %d\r\n", err);
+	printf("result : %d\n", err);
 }
 
 static int cli_at_config(char *str, int len, void *arg) {
@@ -313,7 +316,9 @@ static int cli_at_config(char *str, int len, void *arg) {
 			r = cli_at_config_ipmux(tmpstr, tmplen, arg);
 			break;
 		}
-	} while (0);
+
+		break;
+	} while (1);
 
 	return r;
 }
@@ -348,9 +353,11 @@ static int cli_at_config_echo(char *str, int len, void *arg) {
 		}
 
 		err = esp8266at_cmd_at_e(is_on, _timeoutms);
-		printf("result : %d\r\n", err);
+		printf("result : %d\n", err);
 		r = 0;
-	} while (0);
+
+		break;
+	} while (1);
 
 	return r;
 }
@@ -364,7 +371,7 @@ static int cli_at_config_wmode(char *str, int len, void *arg) {
 	mode = atoi(str);
 
 	err = esp8266at_cmd_at_cwmode(mode, _timeoutms);
-	printf("result : %d\r\n", err);
+	printf("result : %d\n", err);
 	r = 0;
 
 	return r;
@@ -379,7 +386,7 @@ static int cli_at_config_ipmux(char *str, int len, void *arg) {
 	mode = atoi(str);
 
 	err = esp8266at_cmd_at_cipmux(mode, _timeoutms);
-	printf("result : %d\r\n", err);
+	printf("result : %d\n", err);
 	r = 0;
 
 	return r;
@@ -395,9 +402,11 @@ static int cli_at_ap_join(char *str, int len, void *arg) {
 	do {
 		sscanf(str, "%s %s", ssid, passwd);
 		err = esp8266at_cmd_at_cwjap(ssid, passwd, _timeoutms);
-		printf("result : %d\r\n", err);
+		printf("result : %d\n", err);
 		r = 0;
-	} while (0);
+
+		break;
+	} while (1);
 
 	return r;
 }
@@ -406,14 +415,14 @@ static void cli_at_ap_quit(void) {
 	esp8266at_err_t err;
 
 	err = esp8266at_cmd_at_cwqap(_timeoutms);
-	printf("result : %d\r\n", err);
+	printf("result : %d\n", err);
 }
 
 static void cli_at_query_ip(void) {
 	esp8266at_err_t err;
 
 	err = esp8266at_cmd_at_cifsr(_timeoutms);
-	printf("result : %d\r\n", err);
+	printf("result : %d\n", err);
 }
 
 static int cli_at_conn(char *str, int len, void *arg) {
@@ -462,7 +471,9 @@ static int cli_at_conn(char *str, int len, void *arg) {
 			r = 0;
 			break;
 		}
-	} while (0);
+
+		break;
+	} while (1);
 
 	return r;
 }
@@ -478,9 +489,11 @@ static int cli_at_conn_open(char *str, int len, void *arg) {
 	do {
 		sscanf(str, "%s %s %lu", type, ip, &port);
 		err = esp8266at_cmd_at_cipstart(type, ip, port, _timeoutms);
-		printf("result : %d\r\n", err);
+		printf("result : %d\n", err);
 		r = 0;
-	} while (0);
+
+		break;
+	} while (1);
 
 	return r;
 }
@@ -489,14 +502,14 @@ static void cli_at_conn_close(void) {
 	esp8266at_err_t err;
 
 	err = esp8266at_cmd_at_cipclose(_timeoutms);
-	printf("result : %d\r\n", err);
+	printf("result : %d\n", err);
 }
 
 static int cli_at_conn_send(char *str, int len, void *arg) {
 	esp8266at_err_t err;
 
 	err = esp8266at_cmd_at_cipsend((uint8_t*) str, (uint32_t) len, _timeoutms);
-	printf("result : %d\r\n", err);
+	printf("result : %d\n", err);
 
 	return 0;
 }
@@ -508,9 +521,9 @@ static void cli_at_conn_recv(void) {
 	err = esp8266at_cmd_at_ciprecv(_recv_buf, ESP8266AT_RECV_BUFFER_SIZE, &read, _timeoutms);
 	_recv_buf[read] = 0;
 
-	printf("\"%s\"\r\n", (char*) _recv_buf);
+	printf("\"%s\"\n", (char*) _recv_buf);
 
-	printf("result : %d\r\n", err);
+	printf("result : %d\n", err);
 }
 
 static void cli_echo_client2(void) {
@@ -535,56 +548,56 @@ static int cli_echo_client(char *str, int len, void *arg) {
 	do {
 		sscanf(str, "%s %s %s %lu %lu", ssid, passwd, ip, &port, &count);
 
-		printf("\r\n==== Quit from the AP ====\r\n");
+		printf("\n==== Quit from the AP ====\n\n");
 		err = esp8266at_cmd_at_cwqap(_timeoutms);
 		if (err != ESP8266AT_OK) {
 			r = -1;
 			break;
 		}
 
-		printf("\r\n==== Restarts a module ====\r\n");
+		printf("\n==== Restarts a module ====\n\n");
 		err = esp8266at_cmd_at_rst(_timeoutms);
 		if (err != ESP8266AT_OK) {
 			r = -1;
 			break;
 		}
 
-		printf("\r\n==== Config echo on ====\r\n");
+		printf("\n==== Config echo on ====\n\n");
 		err = esp8266at_cmd_at_e(1, _timeoutms);
 		if (err != ESP8266AT_OK) {
 			r = -1;
 			break;
 		}
 
-		printf("\r\n==== Config IP multiple connection mode 0 ====\r\n");
+		printf("\n==== Config IP multiple connection mode 0 ====\n\n");
 		err = esp8266at_cmd_at_cipmux(0, _timeoutms);
 		if (err != ESP8266AT_OK) {
 			r = -1;
 			break;
 		}
 
-		printf("\r\n==== Config WiFi mode 1 ====\r\n");
+		printf("\n==== Config WiFi mode 1 ====\n\n");
 		err = esp8266at_cmd_at_cwmode(1, _timeoutms);
 		if (err != ESP8266AT_OK) {
 			r = -1;
 			break;
 		}
 
-		printf("\r\n==== Join to an AP ====\r\n");
+		printf("\n==== Join to an AP ====\n\n");
 		err = esp8266at_cmd_at_cwjap(ssid, passwd, _timeoutms);
 		if (err != ESP8266AT_OK) {
 			r = -1;
 			break;
 		}
 
-		printf("\r\n==== Query local IP ====\r\n");
+		printf("\n==== Query local IP ====\n\n");
 		err = esp8266at_cmd_at_cifsr(_timeoutms);
 		if (err != ESP8266AT_OK) {
 			r = -1;
 			break;
 		}
 
-		printf("\r\n==== Open connection ====\r\n");
+		printf("\n==== Open connection ====\n\n");
 		err = esp8266at_cmd_at_cipstart("TCP", ip, port, _timeoutms);
 		if (err != ESP8266AT_OK) {
 			r = -1;
@@ -592,7 +605,7 @@ static int cli_echo_client(char *str, int len, void *arg) {
 		}
 
 		for (uint32_t i = 0; i < count; i++) {
-			printf("\r\n---- Send message ----\r\n");
+			printf("\n---- Send message ----\n");
 			sprintf(msg, "%03lu hello", i);
 			msglen = strlen(msg);
 			err = esp8266at_cmd_at_cipsend((uint8_t*) msg, msglen, _timeoutms);
@@ -600,7 +613,7 @@ static int cli_echo_client(char *str, int len, void *arg) {
 				break;
 			}
 
-			printf("\r\n---- Receive message ----\r\n");
+			printf("\n---- Receive message ----\n");
 			err = esp8266at_cmd_at_ciprecv(_recv_buf, ESP8266AT_RECV_BUFFER_SIZE, &read, _timeoutms);
 			if (err != ESP8266AT_OK) {
 				break;
@@ -612,37 +625,39 @@ static int cli_echo_client(char *str, int len, void *arg) {
 				break;
 			}
 
-			printf("\"%s\"\r\n", (char*) _recv_buf);
+			printf("\"%s\"\n", (char*) _recv_buf);
 		}
 		if (err != ESP8266AT_OK) {
 			r = -1;
 			break;
 		}
 
-		printf("\r\n==== Close connection ====\r\n");
+		printf("\n==== Close connection ====\n\n");
 		err = esp8266at_cmd_at_cipclose(_timeoutms);
 		if (err != ESP8266AT_OK) {
 			r = -1;
 			break;
 		}
 
-		printf("\r\n==== Quit from the AP ====\r\n");
+		printf("\n==== Quit from the AP ====\n\n");
 		err = esp8266at_cmd_at_cwqap(_timeoutms);
 		if (err != ESP8266AT_OK) {
 			r = -1;
 			break;
 		}
 		r = 0;
-	} while (0);
+
+		break;
+	} while (1);
 
 	if (err != ESP8266AT_OK) {
 		read = 0;
 		esp8266at_io_read_timedms(_recv_buf, ESP8266AT_RECV_BUFFER_SIZE, &read, _timeoutms);
 		_recv_buf[read] = 0;
-		printf("\"%s\"\r\n", (char*) _recv_buf);
+		printf("\"%s\"\n", (char*) _recv_buf);
 	}
 
-	printf("result : %d\r\n", err);
+	printf("result : %d\n", err);
 
 	return r;
 }
