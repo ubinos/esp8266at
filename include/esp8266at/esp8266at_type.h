@@ -21,6 +21,15 @@ extern "C" {
 
 #include <stdint.h>
 
+#define ESP8266AT_IO_READ_BUFFER_SIZE 2048
+
+#define ESP8266AT_CMD_BUFFER_SIZE 256
+#define ESP8266AT_RSP_BUFFER_SIZE 256
+
+#define ESP8266AT_VERSION_LENGTH_MAX 15
+#define ESP8266AT_IP_ADDR_LENGTH_MAX 31
+#define ESP8266AT_MAC_ADDR_LENGTH_MAX 31
+
 typedef enum {
 	ESP8266AT_OK = 0,
 	ESP8266AT_ERROR,
@@ -29,7 +38,27 @@ typedef enum {
 	ESP8266AT_IO_ERROR,
 } esp8266at_err_t;
 
+typedef struct _esp8266at_read_buffer_t {
+	uint8_t data[ESP8266AT_IO_READ_BUFFER_SIZE];
+	uint16_t head;
+	uint16_t tail;
+} esp8266at_read_buffer_t;
+
 #define ESP8266AT_IO_OPTION__TIMED 0x0001
+
+typedef struct _esp8266at_t {
+	char version[ESP8266AT_VERSION_LENGTH_MAX + 1];
+	char ip_addr[ESP8266AT_IP_ADDR_LENGTH_MAX + 1];
+	char mac_addr[ESP8266AT_MAC_ADDR_LENGTH_MAX + 1];
+
+	char cmd_buf[ESP8266AT_CMD_BUFFER_SIZE];
+	uint8_t rsp_buf[ESP8266AT_RSP_BUFFER_SIZE];
+	mutex_pt cmd_mutex;
+
+	esp8266at_read_buffer_t io_read_buffer;
+	sem_pt io_read_sem;
+	mutex_pt io_mutex;
+} esp8266at_t;
 
 #ifdef	__cplusplus
 }

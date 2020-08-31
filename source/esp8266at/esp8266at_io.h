@@ -21,22 +21,20 @@ extern "C" {
 
 #include <esp8266at/esp8266at_type.h>
 
-#define ESP8266AT_IO_READ_BUFFER_SIZE 2048
+esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at);
+esp8266at_err_t esp8266at_io_deinit(esp8266at_t *esp8266at);
 
-esp8266at_err_t esp8266at_io_init(void);
-esp8266at_err_t esp8266at_io_deinit(void);
+esp8266at_err_t esp8266at_io_read_clear(esp8266at_t *esp8266at);
+esp8266at_err_t esp8266at_io_read_clear_timedms(esp8266at_t *esp8266at, uint32_t timeoutms);
+esp8266at_err_t esp8266at_io_read_clear_advan(esp8266at_t *esp8266at, uint16_t io_option, uint32_t timeoutms);
 
-esp8266at_err_t esp8266at_io_read_clear(void);
-esp8266at_err_t esp8266at_io_read_clear_timedms(uint32_t timeoutms);
-esp8266at_err_t esp8266at_io_read_clear_advan(uint16_t io_option, uint32_t timeoutms);
+esp8266at_err_t esp8266at_io_read(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *read);
+esp8266at_err_t esp8266at_io_read_timedms(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *read, uint32_t timeoutms);
+esp8266at_err_t esp8266at_io_read_advan(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *read, uint16_t io_option, uint32_t timeoutms);
 
-esp8266at_err_t esp8266at_io_read(uint8_t *buffer, uint32_t length, uint32_t *read);
-esp8266at_err_t esp8266at_io_read_timedms(uint8_t *buffer, uint32_t length, uint32_t *read, uint32_t timeoutms);
-esp8266at_err_t esp8266at_io_read_advan(uint8_t *buffer, uint32_t length, uint32_t *read, uint16_t io_option, uint32_t timeoutms);
-
-esp8266at_err_t esp8266at_io_write(uint8_t *buffer, uint32_t length, uint32_t *written);
-esp8266at_err_t esp8266at_io_write_timedms(uint8_t *buffer, uint32_t length, uint32_t *written, uint32_t timeoutms);
-esp8266at_err_t esp8266at_io_write_advan(uint8_t *buffer, uint32_t length, uint32_t *written, uint16_t io_option, uint32_t timeoutms);
+esp8266at_err_t esp8266at_io_write(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *written);
+esp8266at_err_t esp8266at_io_write_timedms(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *written, uint32_t timeoutms);
+esp8266at_err_t esp8266at_io_write_advan(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *written, uint16_t io_option, uint32_t timeoutms);
 
 #ifdef	__cplusplus
 }
