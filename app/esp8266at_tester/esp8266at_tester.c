@@ -552,10 +552,6 @@ static int cli_echo_client(char *str, int len, void *arg) {
 
 		printf("\n==== Quit from the AP ====\n\n");
 		err = esp8266at_cmd_at_cwqap(&_esp8266at, _timeoutms);
-		if (err != ESP8266AT_OK) {
-			r = -1;
-			break;
-		}
 
 		printf("\n==== Restarts a module ====\n\n");
 		err = esp8266at_cmd_at_rst(&_esp8266at, _timeoutms);
