@@ -96,14 +96,14 @@ esp8266at_err_t esp8266at_io_deinit(esp8266at_t *esp8266at) {
 }
 
 esp8266at_err_t esp8266at_io_read_clear( esp8266at_t *esp8266at) {
-	return esp8266at_io_read_clear_advan(esp8266at, 0, 0);
+	return esp8266at_io_read_clear_advan(esp8266at, 0, 0, NULL);
 }
 
-esp8266at_err_t esp8266at_io_read_clear_timedms(esp8266at_t *esp8266at, uint32_t timeoutms) {
-	return esp8266at_io_read_clear_advan(esp8266at, ESP8266AT_IO_OPTION__TIMED, timeoutms);
+esp8266at_err_t esp8266at_io_read_clear_timedms(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t* remain_timeoutms) {
+	return esp8266at_io_read_clear_advan(esp8266at, ESP8266AT_IO_OPTION__TIMED, timeoutms, remain_timeoutms);
 }
 
-esp8266at_err_t esp8266at_io_read_clear_advan(esp8266at_t *esp8266at, uint16_t io_option, uint32_t timeoutms) {
+esp8266at_err_t esp8266at_io_read_clear_advan(esp8266at_t *esp8266at, uint16_t io_option, uint32_t timeoutms, uint32_t* remain_timeoutms) {
 	int r;
 
 	if ((io_option & ESP8266AT_IO_OPTION__TIMED) != 0) {
@@ -121,20 +121,26 @@ esp8266at_err_t esp8266at_io_read_clear_advan(esp8266at_t *esp8266at, uint16_t i
 
 	esp8266at->io_read_buffer.head = esp8266at->io_read_buffer.tail;
 
+	if ((io_option & ESP8266AT_IO_OPTION__TIMED) != 0) {
+		if (remain_timeoutms) {
+			*remain_timeoutms = timeoutms;
+		}
+	}
+
 	mutex_unlock(esp8266at->io_mutex);
 
 	return ESP8266AT_OK;
 }
 
 esp8266at_err_t esp8266at_io_read(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *read) {
-	return esp8266at_io_read_advan(esp8266at, buffer, length, read, 0, 0);
+	return esp8266at_io_read_advan(esp8266at, buffer, length, read, 0, 0, NULL);
 }
 
-esp8266at_err_t esp8266at_io_read_timedms(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *read, uint32_t timeoutms) {
-	return esp8266at_io_read_advan(esp8266at, buffer, length, read, ESP8266AT_IO_OPTION__TIMED, timeoutms);
+esp8266at_err_t esp8266at_io_read_timedms(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *read, uint32_t timeoutms, uint32_t* remain_timeoutms) {
+	return esp8266at_io_read_advan(esp8266at, buffer, length, read, ESP8266AT_IO_OPTION__TIMED, timeoutms, remain_timeoutms);
 }
 
-esp8266at_err_t esp8266at_io_read_advan(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *read, uint16_t io_option, uint32_t timeoutms) {
+esp8266at_err_t esp8266at_io_read_advan(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *read, uint16_t io_option, uint32_t timeoutms, uint32_t* remain_timeoutms) {
 	int r;
 	esp8266at_err_t err;
 	uint32_t read_tmp;
@@ -191,23 +197,30 @@ esp8266at_err_t esp8266at_io_read_advan(esp8266at_t *esp8266at, uint8_t *buffer,
 		err = ESP8266AT_OK;
 	}
 
+	if ((io_option & ESP8266AT_IO_OPTION__TIMED) != 0) {
+		if (remain_timeoutms) {
+			*remain_timeoutms = timeoutms;
+		}
+	}
+
 	mutex_unlock(esp8266at->io_mutex);
 
 	return err;
 }
 
 esp8266at_err_t esp8266at_io_write(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *written) {
-	return esp8266at_io_write_advan(esp8266at, buffer, length, written, 0, 0);
+	return esp8266at_io_write_advan(esp8266at, buffer, length, written, 0, 0, NULL);
 }
 
-esp8266at_err_t esp8266at_io_write_timedms(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *written, uint32_t timeoutms) {
-	return esp8266at_io_write_advan(esp8266at, buffer, length, written, ESP8266AT_IO_OPTION__TIMED, timeoutms);
+esp8266at_err_t esp8266at_io_write_timedms(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *written, uint32_t timeoutms, uint32_t* remain_timeoutms) {
+	return esp8266at_io_write_advan(esp8266at, buffer, length, written, ESP8266AT_IO_OPTION__TIMED, timeoutms, remain_timeoutms);
 }
 
-esp8266at_err_t esp8266at_io_write_advan(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *written, uint16_t io_option, uint32_t timeoutms) {
+esp8266at_err_t esp8266at_io_write_advan(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *written, uint16_t io_option, uint32_t timeoutms, uint32_t* remain_timeoutms) {
 	int r;
 	esp8266at_err_t err;
 	HAL_StatusTypeDef status;
+	tickcount_t start_tick, end_tick, diff_tick;
 
 	if ((io_option & ESP8266AT_IO_OPTION__TIMED) != 0) {
 		r = mutex_lock_timedms(esp8266at->io_mutex, timeoutms);
@@ -224,7 +237,11 @@ esp8266at_err_t esp8266at_io_write_advan(esp8266at_t *esp8266at, uint8_t *buffer
 	}
 
 	for (;;) {
+		start_tick = ubik_gettickcount();
 		status = HAL_UART_Transmit(&_esp8266at_uart, buffer, length, timeoutms);
+		end_tick = ubik_gettickcount();
+		diff_tick = ubik_gettickdiff(start_tick, end_tick);
+		timeoutms -= min(timeoutms, ubik_ticktotimems(diff_tick.low));
 
 		if (status == HAL_TIMEOUT) {
 			if ((io_option & ESP8266AT_IO_OPTION__TIMED) == 0) {
@@ -244,6 +261,12 @@ esp8266at_err_t esp8266at_io_write_advan(esp8266at_t *esp8266at, uint8_t *buffer
 		} else {
 			err = ESP8266AT_IO_ERROR;
 			break;
+		}
+	}
+
+	if ((io_option & ESP8266AT_IO_OPTION__TIMED) != 0) {
+		if (remain_timeoutms) {
+			*remain_timeoutms = timeoutms;
 		}
 	}
 
