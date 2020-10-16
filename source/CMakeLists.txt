@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.3)
 
 include("${CMAKE_CURRENT_LIST_DIR}/../../ubinos/config/common.cmake")
 
-project(esp8266at_wrapper)
+project(esp8266at)
 
 project_begin()
 project_add_library(ubinos)
