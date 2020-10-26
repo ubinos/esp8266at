@@ -26,18 +26,18 @@ esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at) {
 	assert(esp8266at->io_read_sem == NULL);
 	assert(esp8266at->io_mutex == NULL);
 
-	err = ESP8266AT_ERROR;
+	err = ESP8266AT_ERR_ERROR;
 
 	do {
 		r = semb_create(&esp8266at->io_read_sem);
 		if (r != 0) {
-			err = ESP8266AT_ERROR;
+			err = ESP8266AT_ERR_ERROR;
 			break;
 		}
 
 		r = mutex_create(&esp8266at->io_mutex);
 		if (r != 0) {
-			err = ESP8266AT_ERROR;
+			err = ESP8266AT_ERR_ERROR;
 			break;
 		}
 
@@ -53,7 +53,7 @@ esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at) {
 
 		/* Configure the USART IP */
 		if (HAL_UART_Init(&_esp8266at_uart) != HAL_OK) {
-			err = ESP8266AT_ERROR;
+			err = ESP8266AT_ERR_ERROR;
 			break;
 		}
 
@@ -62,12 +62,12 @@ esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at) {
 
 		HAL_UART_Receive_IT(&_esp8266at_uart, &esp8266at->io_read_buffer.data[0], 1);
 
-		err = ESP8266AT_OK;
+		err = ESP8266AT_ERR_OK;
 
 		break;
 	} while (1);
 
-	if (err != ESP8266AT_OK) {
+	if (err != ESP8266AT_ERR_OK) {
 		if (esp8266at->io_mutex != NULL) {
 			mutex_delete(&esp8266at->io_mutex);
 		}
@@ -80,13 +80,13 @@ esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at) {
 }
 
 esp8266at_err_t esp8266at_io_deinit(esp8266at_t *esp8266at) {
-	esp8266at_err_t err = ESP8266AT_OK;
+	esp8266at_err_t err = ESP8266AT_ERR_OK;
 
 	assert(esp8266at->io_read_sem != NULL);
 	assert(esp8266at->io_mutex != NULL);
 
 	if (HAL_UART_DeInit(&_esp8266at_uart) != HAL_OK) {
-		err = ESP8266AT_ERROR;
+		err = ESP8266AT_ERR_ERROR;
 	}
 
 	mutex_delete(&esp8266at->io_mutex);
@@ -109,14 +109,14 @@ esp8266at_err_t esp8266at_io_read_clear_advan(esp8266at_t *esp8266at, uint16_t i
 	if ((io_option & ESP8266AT_IO_OPTION__TIMED) != 0) {
 		r = mutex_lock_timedms(esp8266at->io_mutex, timeoutms);
 		if (r == UBIK_ERR__TIMEOUT) {
-			return ESP8266AT_TIMEOUT;
+			return ESP8266AT_ERR_TIMEOUT;
 		}
 		timeoutms = task_getremainingtimeoutms();
 	} else {
 		r = mutex_lock(esp8266at->io_mutex);
 	}
 	if (r != 0) {
-		return ESP8266AT_ERROR;
+		return ESP8266AT_ERR_ERROR;
 	}
 
 	esp8266at->io_read_buffer.head = esp8266at->io_read_buffer.tail;
@@ -129,7 +129,7 @@ esp8266at_err_t esp8266at_io_read_clear_advan(esp8266at_t *esp8266at, uint16_t i
 
 	mutex_unlock(esp8266at->io_mutex);
 
-	return ESP8266AT_OK;
+	return ESP8266AT_ERR_OK;
 }
 
 esp8266at_err_t esp8266at_io_read(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *read) {
@@ -151,19 +151,19 @@ esp8266at_err_t esp8266at_io_read_advan(esp8266at_t *esp8266at, uint8_t *buffer,
 	if ((io_option & ESP8266AT_IO_OPTION__TIMED) != 0) {
 		r = mutex_lock_timedms(esp8266at->io_mutex, timeoutms);
 		if (r == UBIK_ERR__TIMEOUT) {
-			return ESP8266AT_TIMEOUT;
+			return ESP8266AT_ERR_TIMEOUT;
 		}
 		timeoutms = task_getremainingtimeoutms();
 	} else {
 		r = mutex_lock(esp8266at->io_mutex);
 	}
 	if (r != 0) {
-		return ESP8266AT_ERROR;
+		return ESP8266AT_ERR_ERROR;
 	}
 
 	read_tmp = 0;
 	is_first = 1;
-	err = ESP8266AT_IO_ERROR;
+	err = ESP8266AT_ERR_IO_ERROR;
 
 	while (read_tmp < length) {
 		if (esp8266at->io_read_buffer.head != esp8266at->io_read_buffer.tail) {
@@ -174,7 +174,7 @@ esp8266at_err_t esp8266at_io_read_advan(esp8266at_t *esp8266at, uint8_t *buffer,
 		} else {
 			if ((io_option & ESP8266AT_IO_OPTION__TIMED) != 0) {
 				if (is_first == 0 && timeoutms == 0) {
-					err = ESP8266AT_TIMEOUT;
+					err = ESP8266AT_ERR_TIMEOUT;
 					break;
 				}
 				r = sem_take_timedms(esp8266at->io_read_sem, timeoutms);
@@ -194,7 +194,7 @@ esp8266at_err_t esp8266at_io_read_advan(esp8266at_t *esp8266at, uint8_t *buffer,
 	}
 
 	if (read_tmp == length) {
-		err = ESP8266AT_OK;
+		err = ESP8266AT_ERR_OK;
 	}
 
 	if ((io_option & ESP8266AT_IO_OPTION__TIMED) != 0) {
@@ -225,7 +225,7 @@ esp8266at_err_t esp8266at_io_write_advan(esp8266at_t *esp8266at, uint8_t *buffer
 	if ((io_option & ESP8266AT_IO_OPTION__TIMED) != 0) {
 		r = mutex_lock_timedms(esp8266at->io_mutex, timeoutms);
 		if (r == UBIK_ERR__TIMEOUT) {
-			return ESP8266AT_TIMEOUT;
+			return ESP8266AT_ERR_TIMEOUT;
 		}
 		timeoutms = task_getremainingtimeoutms();
 	} else {
@@ -233,7 +233,7 @@ esp8266at_err_t esp8266at_io_write_advan(esp8266at_t *esp8266at, uint8_t *buffer
 		timeoutms = 1000;
 	}
 	if (r != 0) {
-		return ESP8266AT_ERROR;
+		return ESP8266AT_ERR_ERROR;
 	}
 
 	for (;;) {
@@ -250,16 +250,16 @@ esp8266at_err_t esp8266at_io_write_advan(esp8266at_t *esp8266at, uint8_t *buffer
 			if (written != NULL) {
 				*written = 0;
 			}
-			err = ESP8266AT_TIMEOUT;
+			err = ESP8266AT_ERR_TIMEOUT;
 			break;
 		} else if (status == HAL_OK) {
 			if (written != NULL) {
 				*written = length;
 			}
-			err = ESP8266AT_OK;
+			err = ESP8266AT_ERR_OK;
 			break;
 		} else {
-			err = ESP8266AT_IO_ERROR;
+			err = ESP8266AT_ERR_IO_ERROR;
 			break;
 		}
 	}
