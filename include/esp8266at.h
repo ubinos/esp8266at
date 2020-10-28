@@ -7,8 +7,9 @@
 #ifndef ESP8266AT_H_
 #define ESP8266AT_H_
 
-#ifdef	__cplusplus
-extern "C" {
+#ifdef __cplusplus
+extern "C"
+{
 #endif
 
 /*!
@@ -53,7 +54,7 @@ esp8266at_err_t esp8266at_cmd_at_cipsend(esp8266at_t *esp8266at, uint8_t *buffer
 
 esp8266at_err_t esp8266at_cmd_at_ciprecv(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *received, uint32_t timeoutms, uint32_t* remain_timeoutms);
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 

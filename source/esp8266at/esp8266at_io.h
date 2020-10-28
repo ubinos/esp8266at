@@ -7,8 +7,9 @@
 #ifndef ESP8266AT_IO_H_
 #define ESP8266AT_IO_H_
 
-#ifdef	__cplusplus
-extern "C" {
+#ifdef __cplusplus
+extern "C"
+{
 #endif
 
 /*!
@@ -36,7 +37,7 @@ esp8266at_err_t esp8266at_io_write(esp8266at_t *esp8266at, uint8_t *buffer, uint
 esp8266at_err_t esp8266at_io_write_timedms(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *written, uint32_t timeoutms, uint32_t* remain_timeoutms);
 esp8266at_err_t esp8266at_io_write_advan(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *written, uint16_t io_option, uint32_t timeoutms, uint32_t* remain_timeoutms);
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 
