@@ -13,6 +13,7 @@ SERVER_PORT = 9000
 DATA_SIZE_MAX = 1024
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 sock.bind((SERVER_ADDR, SERVER_PORT))
 sock.listen(1)
 

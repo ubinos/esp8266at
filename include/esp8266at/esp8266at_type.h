@@ -20,9 +20,12 @@ extern "C"
  * ESP8266 module과 AT 명령 통신을 하기 위한 형들을 정의합니다.
  */
 
+#include <ubinos.h>
+
 #include <stdint.h>
 
-#define ESP8266AT_IO_READ_BUFFER_SIZE 2048
+#define ESP8266AT_IO_READ_BUF_SIZE 2048
+#define ESP8266AT_IO_WRITE_BUF_SIZE 2048
 
 #define ESP8266AT_CMD_BUFFER_SIZE 256
 #define ESP8266AT_RSP_BUFFER_SIZE 256
@@ -30,6 +33,8 @@ extern "C"
 #define ESP8266AT_VERSION_LENGTH_MAX 15
 #define ESP8266AT_IP_ADDR_LENGTH_MAX 31
 #define ESP8266AT_MAC_ADDR_LENGTH_MAX 31
+
+#define ESP8266AT_IO_OPTION__TIMED 0x0001
 
 typedef enum
 {
@@ -39,15 +44,6 @@ typedef enum
     ESP8266AT_ERR_BUSY,
     ESP8266AT_ERR_IO_ERROR,
 } esp8266at_err_t;
-
-typedef struct _esp8266at_read_buffer_t
-{
-    uint8_t data[ESP8266AT_IO_READ_BUFFER_SIZE];
-    uint16_t head;
-    uint16_t tail;
-} esp8266at_read_buffer_t;
-
-#define ESP8266AT_IO_OPTION__TIMED 0x0001
 
 typedef struct _esp8266at_t
 {
@@ -59,9 +55,14 @@ typedef struct _esp8266at_t
     uint8_t rsp_buf[ESP8266AT_RSP_BUFFER_SIZE];
     mutex_pt cmd_mutex;
 
-    esp8266at_read_buffer_t io_read_buffer;
-    sem_pt io_read_sem;
     mutex_pt io_mutex;
+    sem_pt io_read_sem;
+    sem_pt io_write_sem;
+    cbuf_pt io_read_buf;
+    cbuf_pt io_write_buf;
+
+    uint8_t rx_overflow_count;
+    uint8_t tx_busy;
 } esp8266at_t;
 
 #ifdef __cplusplus

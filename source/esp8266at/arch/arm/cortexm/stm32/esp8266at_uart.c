@@ -5,6 +5,13 @@
  */
 
 #include <ubinos.h>
+
+#if (UBINOS__BSP__STM32_STM32XXXX == 1)
+
+#if (INCLUDE__UBINOS__UBIK != 1)
+	#error "ubik is necessary"
+#endif
+
 #include <assert.h>
 
 #include "../../../../esp8266at_io.h"
@@ -19,72 +26,64 @@ void esp8266at_io_callback(void);
 extern esp8266at_t _esp8266at;
 UART_HandleTypeDef _esp8266at_uart;
 
-esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at)
-{
-    int r;
-    esp8266at_err_t err;
+esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at) {
+	int r;
+	esp8266at_err_t err;
 
-    assert(esp8266at->io_read_sem == NULL);
-    assert(esp8266at->io_mutex == NULL);
+	assert(esp8266at->io_read_sem == NULL);
+	assert(esp8266at->io_mutex == NULL);
 
-    err = ESP8266AT_ERR_ERROR;
+	err = ESP8266AT_ERR_ERROR;
 
-    do
-    {
-        r = semb_create(&esp8266at->io_read_sem);
-        if (r != 0)
-        {
-            err = ESP8266AT_ERR_ERROR;
-            break;
-        }
+	do {
+		r = semb_create(&esp8266at->io_read_sem);
+		if (r != 0) {
+			err = ESP8266AT_ERR_ERROR;
+			break;
+		}
 
-        r = mutex_create(&esp8266at->io_mutex);
-        if (r != 0)
-        {
-            err = ESP8266AT_ERR_ERROR;
-            break;
-        }
+		r = mutex_create(&esp8266at->io_mutex);
+		if (r != 0) {
+			err = ESP8266AT_ERR_ERROR;
+			break;
+		}
 
-        /* Set the WiFi USART configuration parameters */
-        _esp8266at_uart.Instance = USARTx;
-        _esp8266at_uart.Init.BaudRate = 115200;
-        _esp8266at_uart.Init.WordLength = UART_WORDLENGTH_8B;
-        _esp8266at_uart.Init.StopBits = UART_STOPBITS_1;
-        _esp8266at_uart.Init.Parity = UART_PARITY_NONE;
-        _esp8266at_uart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-        _esp8266at_uart.Init.Mode = UART_MODE_TX_RX;
-        _esp8266at_uart.Init.OverSampling = UART_OVERSAMPLING_16;
+		esp8266at->io_read_buffer.head = 0;
+		esp8266at->io_read_buffer.tail = 0;
 
-        /* Configure the USART IP */
-        if (HAL_UART_Init(&_esp8266at_uart) != HAL_OK)
-        {
-            err = ESP8266AT_ERR_ERROR;
-            break;
-        }
+		/* Set the WiFi USART configuration parameters */
+		_esp8266at_uart.Instance = USARTx;
+		_esp8266at_uart.Init.BaudRate = 115200;
+		_esp8266at_uart.Init.WordLength = UART_WORDLENGTH_8B;
+		_esp8266at_uart.Init.StopBits = UART_STOPBITS_1;
+		_esp8266at_uart.Init.Parity = UART_PARITY_NONE;
+		_esp8266at_uart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+		_esp8266at_uart.Init.Mode = UART_MODE_TX_RX;
+		_esp8266at_uart.Init.OverSampling = UART_OVERSAMPLING_16;
 
-        esp8266at->io_read_buffer.head = 0;
-        esp8266at->io_read_buffer.tail = 0;
+		/* Configure the USART IP */
+		if (HAL_UART_Init(&_esp8266at_uart) != HAL_OK) {
+			err = ESP8266AT_ERR_ERROR;
+			break;
+		}
 
-        HAL_UART_Receive_IT(&_esp8266at_uart, &esp8266at->io_read_buffer.data[0], 1);
+		HAL_UART_Receive_IT(&_esp8266at_uart, &esp8266at->io_read_buffer.data[0], 1);
 
-        err = ESP8266AT_ERR_OK;
+		err = ESP8266AT_ERR_OK;
 
-        break;
-    } while (1);
+		break;
+	} while (1);
 
-    if (err != ESP8266AT_ERR_OK)
-    {
-        if (esp8266at->io_mutex != NULL)
-        {
-            mutex_delete(&esp8266at->io_mutex);
-        }
-        if (esp8266at->io_read_sem != NULL)
-        {
-            sem_delete(&esp8266at->io_read_sem);
-        }
-    }
+	if (err != ESP8266AT_ERR_OK) {
+		if (esp8266at->io_mutex != NULL) {
+			mutex_delete(&esp8266at->io_mutex);
+		}
+		if (esp8266at->io_read_sem != NULL) {
+			sem_delete(&esp8266at->io_read_sem);
+		}
+	}
 
-    return err;
+	return err;
 }
 
 esp8266at_err_t esp8266at_io_deinit(esp8266at_t *esp8266at)
@@ -105,17 +104,17 @@ esp8266at_err_t esp8266at_io_deinit(esp8266at_t *esp8266at)
     return err;
 }
 
-esp8266at_err_t esp8266at_io_read_clear(esp8266at_t *esp8266at)
+esp8266at_err_t esp8266at_io_read_buf_clear(esp8266at_t *esp8266at)
 {
-    return esp8266at_io_read_clear_advan(esp8266at, 0, 0, NULL);
+    return esp8266at_io_read_buf_clear_advan(esp8266at, 0, 0, NULL);
 }
 
-esp8266at_err_t esp8266at_io_read_clear_timedms(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms)
+esp8266at_err_t esp8266at_io_read_buf_clear_timedms(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms)
 {
-    return esp8266at_io_read_clear_advan(esp8266at, ESP8266AT_IO_OPTION__TIMED, timeoutms, remain_timeoutms);
+    return esp8266at_io_read_buf_clear_advan(esp8266at, ESP8266AT_IO_OPTION__TIMED, timeoutms, remain_timeoutms);
 }
 
-esp8266at_err_t esp8266at_io_read_clear_advan(esp8266at_t *esp8266at, uint16_t io_option, uint32_t timeoutms, uint32_t *remain_timeoutms)
+esp8266at_err_t esp8266at_io_read_buf_clear_advan(esp8266at_t *esp8266at, uint16_t io_option, uint32_t timeoutms, uint32_t *remain_timeoutms)
 {
     int r;
 
@@ -361,4 +360,6 @@ void esp8266at_io_callback(void)
         }
     }
 }
+
+#endif /* (UBINOS__BSP__STM32_STM32XXXX == 1) */
 

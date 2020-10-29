@@ -162,13 +162,18 @@ static esp8266at_err_t _send_cmd_and_wait_rsp(esp8266at_t *esp8266at, char *cmd,
 
     do
     {
-        err = esp8266at_io_read_clear_timedms(esp8266at, timeoutms, &timeoutms);
+        err = esp8266at_io_read_buf_clear_timedms(esp8266at, timeoutms, &timeoutms);
         if (err != ESP8266AT_ERR_OK)
         {
             break;
         }
 
         err = esp8266at_io_write_timedms(esp8266at, (uint8_t*) cmd, strlen(cmd), NULL, timeoutms, &timeoutms);
+        if (err != ESP8266AT_ERR_OK)
+        {
+            break;
+        }
+        err = esp8266at_io_flush_timedms(esp8266at, timeoutms, &timeoutms);
         if (err != ESP8266AT_ERR_OK)
         {
             break;
@@ -223,6 +228,10 @@ esp8266at_err_t esp8266at_cmd_at_rst(esp8266at_t *esp8266at, uint32_t timeoutms,
     int r;
     esp8266at_err_t err;
 
+#if (UBINOS__BSP__NRF52_NRF52XXX == 1)
+    (void) r;
+    err = ESP8266AT_ERR_OK;
+#else
     r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
@@ -248,6 +257,7 @@ esp8266at_err_t esp8266at_cmd_at_rst(esp8266at_t *esp8266at, uint32_t timeoutms,
     }
 
     mutex_unlock(esp8266at->cmd_mutex);
+#endif /* (UBINOS__BSP__NRF52_NRF52XXX == 1) */
 
     return err;
 }
@@ -644,6 +654,11 @@ esp8266at_err_t esp8266at_cmd_at_cipsend(esp8266at_t *esp8266at, uint8_t *buffer
         }
 
         err = esp8266at_io_write_timedms(esp8266at, buffer, length, NULL, timeoutms, &timeoutms);
+        if (err != ESP8266AT_ERR_OK)
+        {
+            break;
+        }
+        err = esp8266at_io_flush_timedms(esp8266at, timeoutms, &timeoutms);
         if (err != ESP8266AT_ERR_OK)
         {
             break;
