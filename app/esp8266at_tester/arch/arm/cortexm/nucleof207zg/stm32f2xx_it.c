@@ -35,8 +35,9 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-extern UART_HandleTypeDef _esp8266at_uart;
-extern void esp8266at_io_callback(void);
+extern UART_HandleTypeDef _g_esp8266at_uart;
+extern void esp8266at_io_rx_callback(void);
+extern void esp8266at_io_tx_callback(void);
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
@@ -159,7 +160,7 @@ void SysTick_Handler(void)
   */
 void USARTx_IRQHandler(void)
 {
-  HAL_UART_IRQHandler(&_esp8266at_uart);
+  HAL_UART_IRQHandler(&_g_esp8266at_uart);
 }
 
 /**
@@ -174,8 +175,15 @@ void USARTx_IRQHandler(void)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
 	if (UartHandle->Instance == USARTx) {
-		esp8266at_io_callback();
+		esp8266at_io_rx_callback();
 	}
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+    if (UartHandle->Instance == USARTx) {
+        esp8266at_io_tx_callback();
+    }
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)

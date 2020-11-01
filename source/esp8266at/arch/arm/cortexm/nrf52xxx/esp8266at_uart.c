@@ -22,7 +22,7 @@
 #undef LOGM_CATEGORY
 #define LOGM_CATEGORY LOGM_CATEGORY__USER00
 
-extern esp8266at_t _esp8266at;
+extern esp8266at_t _g_esp8266at;
 
 static nrf_drv_uart_t _g_esp8266at_uart = NRF_DRV_UART_INSTANCE(1);
 
@@ -32,10 +32,10 @@ static void esp8266at_io_event_handler(nrf_drv_uart_event_t *p_event, void *p_co
     uint8_t *buf;
     uint32_t len;
     nrf_drv_uart_t *uart = &_g_esp8266at_uart;
-    cbuf_pt rbuf = _esp8266at.io_read_buf;
-    cbuf_pt wbuf = _esp8266at.io_write_buf;
-    sem_pt rsem = _esp8266at.io_read_sem;
-    sem_pt wsem = _esp8266at.io_write_sem;
+    cbuf_pt rbuf = _g_esp8266at.io_read_buf;
+    cbuf_pt wbuf = _g_esp8266at.io_write_buf;
+    sem_pt rsem = _g_esp8266at.io_read_sem;
+    sem_pt wsem = _g_esp8266at.io_write_sem;
 
     switch (p_event->type)
     {
@@ -47,7 +47,7 @@ static void esp8266at_io_event_handler(nrf_drv_uart_event_t *p_event, void *p_co
         {
             if (cbuf_is_full(rbuf))
             {
-                _esp8266at.rx_overflow_count++;
+                _g_esp8266at.rx_overflow_count++;
                 break;
             }
 
@@ -84,7 +84,7 @@ static void esp8266at_io_event_handler(nrf_drv_uart_event_t *p_event, void *p_co
         }
         else
         {
-            _esp8266at.tx_busy = 0;
+            _g_esp8266at.tx_busy = 0;
             sem_give(wsem);
         }
         break;
@@ -262,7 +262,7 @@ esp8266at_err_t esp8266at_io_flush_advan(esp8266at_t *esp8266at, uint16_t io_opt
             assert(r == 0);
         }
 
-        while (1)
+        for (;;)
         {
             if (cbuf_get_len(esp8266at->io_write_buf) == 0)
             {
@@ -336,7 +336,7 @@ esp8266at_err_t esp8266at_io_read_advan(esp8266at_t *esp8266at, uint8_t *buffer,
         read_tmp = 0;
         read_tmp2 = 0;
 
-        while (1)
+        for (;;)
         {
             ubi_err = cbuf_read(esp8266at->io_read_buf, &buffer[read_tmp], length - read_tmp, &read_tmp2);
             assert(ubi_err == UBI_ERR_OK || ubi_err == UBI_ERR_BUF_EMPTY);

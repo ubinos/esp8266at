@@ -61,7 +61,7 @@ typedef struct _esp8266at_t
     cbuf_pt io_read_buf;
     cbuf_pt io_write_buf;
 
-    uint8_t rx_overflow_count;
+    uint32_t rx_overflow_count;
     uint8_t tx_busy;
 } esp8266at_t;
 
