@@ -104,6 +104,9 @@ esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at)
     uint32_t len;
     nrf_drv_uart_config_t config;
     assert(esp8266at != NULL);
+    (void) r;
+    (void) ubi_err;
+    (void) nrf_err;
 
     esp8266at->rx_overflow_count = 0;
     esp8266at->tx_busy = 0;
@@ -152,6 +155,8 @@ esp8266at_err_t esp8266at_io_deinit(esp8266at_t *esp8266at)
     ubi_err_t ubi_err;
     int r;
     assert(esp8266at != NULL);
+    (void) r;
+    (void) ubi_err;
 
     r = mutex_delete(&esp8266at->io_mutex);
     assert(r == 0);
@@ -185,6 +190,8 @@ esp8266at_err_t esp8266at_io_read_buf_clear_advan(esp8266at_t *esp8266at, uint16
     ubi_err_t ubi_err;
     int r;
     assert(esp8266at != NULL);
+    (void) r;
+    (void) ubi_err;
 
     do
     {
@@ -313,6 +320,8 @@ esp8266at_err_t esp8266at_io_read_advan(esp8266at_t *esp8266at, uint8_t *buffer,
     uint32_t read_tmp2;
     assert(esp8266at != NULL);
     assert(buffer != NULL);
+    (void) r;
+    (void) ubi_err;
 
     do
     {

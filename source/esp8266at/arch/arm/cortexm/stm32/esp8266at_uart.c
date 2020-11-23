@@ -98,6 +98,9 @@ esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at) {
     uint8_t *buf;
     uint32_t len;
     assert(esp8266at != NULL);
+    (void) r;
+    (void) ubi_err;
+    (void) stm_err;
 
     esp8266at->rx_overflow_count = 0;
     esp8266at->tx_busy = 0;
@@ -142,6 +145,8 @@ esp8266at_err_t esp8266at_io_deinit(esp8266at_t *esp8266at)
     ubi_err_t ubi_err;
     int r;
     assert(esp8266at != NULL);
+    (void) r;
+    (void) ubi_err;
 
     HAL_UART_DeInit(&_g_esp8266at_uart);
 
@@ -177,6 +182,8 @@ esp8266at_err_t esp8266at_io_read_buf_clear_advan(esp8266at_t *esp8266at, uint16
     ubi_err_t ubi_err;
     int r;
     assert(esp8266at != NULL);
+    (void) r;
+    (void) ubi_err;
 
     do
     {
@@ -305,6 +312,8 @@ esp8266at_err_t esp8266at_io_read_advan(esp8266at_t *esp8266at, uint8_t *buffer,
     uint32_t read_tmp2;
     assert(esp8266at != NULL);
     assert(buffer != NULL);
+    (void) r;
+    (void) ubi_err;
 
     do
     {
