@@ -68,42 +68,47 @@ int appmain(int argc, char *argv[])
     return 0;
 }
 
-static void rootfunc(void *arg) {
-	int r;
+static void rootfunc(void *arg)
+{
+    int r;
 
 #if (UBINOS__BSP__STM32_STM32XXXX == 1)
-	HAL_Init();
+    HAL_Init();
 #endif /* (UBINOS__BSP__STM32_STM32XXXX == 1) */
 
-	esp8266at_init(&_g_esp8266at);
+    esp8266at_init(&_g_esp8266at);
 
-	printf("\n\n\n");
-	printf("================================================================================\n");
-	printf("esp8266at_tester (build time: %s %s)\n", __TIME__, __DATE__);
-	printf("================================================================================\n");
-	printf("\n");
+    printf("\n\n\n");
+    printf("================================================================================\n");
+    printf("esp8266at_tester (build time: %s %s)\n", __TIME__, __DATE__);
+    printf("================================================================================\n");
+    printf("\n");
 
-	logm_setlevel(LOGM_CATEGORY__USER00, LOGM_LEVEL__DEBUG);
+    logm_setlevel(LOGM_CATEGORY__USER00, LOGM_LEVEL__DEBUG);
 
-	r = cli_sethookfunc(clihookfunc, NULL);
-	if (0 != r) {
-		logme("fail at cli_sethookfunc");
-	}
+    r = cli_sethookfunc(clihookfunc, NULL);
+    if (0 != r)
+    {
+        logme("fail at cli_sethookfunc");
+    }
 
-	r = cli_sethelphookfunc(clihelphookfunc);
-	if (0 != r) {
-		logme("fail at cli_sethelphookfunc");
-	}
+    r = cli_sethelphookfunc(clihelphookfunc);
+    if (0 != r)
+    {
+        logme("fail at cli_sethelphookfunc");
+    }
 
-	r = cli_setprompt("esp8266at_tester> ");
-	if (0 != r) {
-		logme("fail at cli_setprompt");
-	}
+    r = cli_setprompt("esp8266at_tester> ");
+    if (0 != r)
+    {
+        logme("fail at cli_setprompt");
+    }
 
-	r = task_create(NULL, cli_main, NULL, task_getmiddlepriority(), 192, "cli_main");
-	if (0 != r) {
-		logme("fail at task_create");
-	}
+    r = task_create(NULL, cli_main, NULL, task_getmiddlepriority(), 192, "cli_main");
+    if (0 != r)
+    {
+        logme("fail at task_create");
+    }
 }
 
 static int clihookfunc(char *str, int len, void *arg)
