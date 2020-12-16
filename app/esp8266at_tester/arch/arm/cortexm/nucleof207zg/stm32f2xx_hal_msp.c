@@ -56,8 +56,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
   /* Enable the GPIO clock */
   ESP8266_RST_GPIO_CLK_ENABLE();
+  ESP8266_CS_GPIO_CLK_ENABLE();
 
-  /* Set the GPIO pin configuration parametres */
+  /* Set the RST GPIO pin configuration parametres */
   GPIO_InitStruct.Pin       = ESP8266_RST_PIN;
   GPIO_InitStruct.Mode      = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull      = GPIO_PULLUP;
@@ -65,6 +66,20 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
   /* Configure the RST IO */
   HAL_GPIO_Init(ESP8266_RST_GPIO_PORT, &GPIO_InitStruct);
+
+  /* Set the CS GPIO pin configuration parametres */
+  GPIO_InitStruct.Pin       = ESP8266_CS_PIN;
+  GPIO_InitStruct.Mode      = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull      = GPIO_PULLUP;
+  GPIO_InitStruct.Speed     = GPIO_SPEED_HIGH;
+
+  /* Configure the CS IO */
+  HAL_GPIO_Init(ESP8266_CS_GPIO_PORT, &GPIO_InitStruct);
+
+  /* Set the RST IO low */
+  HAL_GPIO_WritePin(ESP8266_RST_GPIO_PORT, ESP8266_RST_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(ESP8266_CS_GPIO_PORT, ESP8266_CS_PIN, GPIO_PIN_SET);
+  HAL_Delay(100);
 
   /* Set the RST IO high */
   HAL_GPIO_WritePin(ESP8266_RST_GPIO_PORT, ESP8266_RST_PIN, GPIO_PIN_SET);

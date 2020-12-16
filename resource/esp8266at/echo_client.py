@@ -9,7 +9,7 @@
 import socket
  
 SERVER_ADDR = '127.0.0.1'
-SERVER_PORT = 9000
+SERVER_PORT = 9010
 DATA_SIZE_MAX = 1024
  
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

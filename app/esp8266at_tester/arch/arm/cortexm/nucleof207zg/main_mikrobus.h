@@ -56,6 +56,15 @@
 #define ESP8266_RST_PIN                  GPIO_PIN_3
 #define ESP8266_RST_GPIO_CLK_ENABLE()    __HAL_RCC_GPIOC_CLK_ENABLE()
 
+#define ESP8266_CS_GPIO_PORT            GPIOD
+#define ESP8266_CS_PIN                  GPIO_PIN_15
+#define ESP8266_CS_GPIO_CLK_ENABLE()    __HAL_RCC_GPIOD_CLK_ENABLE()
+
+/* WiFi module CS pin definitions */
+#define ESP8266_CS_GPIO_PORT            GPIOD
+#define ESP8266_CS_PIN                  GPIO_PIN_15
+#define ESP8266_CS_GPIO_CLK_ENABLE()    __HAL_RCC_GPIOD_CLK_ENABLE()
+
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 

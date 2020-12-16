@@ -647,7 +647,7 @@ static int cli_echo_client(char *str, int len, void *arg)
         }
 
         printf("\n==== Join to an AP ====\n\n");
-        err = esp8266at_cmd_at_cwjap(&_g_esp8266at, ssid, passwd, _timeoutms, NULL);
+        err = esp8266at_cmd_at_cwjap(&_g_esp8266at, ssid, passwd, _timeoutms * 3, NULL);
         if (err != ESP8266AT_ERR_OK)
         {
             r = -1;

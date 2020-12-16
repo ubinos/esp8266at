@@ -241,14 +241,14 @@ esp8266at_err_t esp8266at_cmd_at_rst(esp8266at_t *esp8266at, uint32_t timeoutms,
 
     err = _send_cmd_and_wait_rsp(esp8266at, "AT+RST\r\n", "OK\r\n", timeoutms, &timeoutms);
 
-    task_sleepms(500);
-    if (timeoutms < 500)
+    task_sleepms(1000);
+    if (timeoutms < 1000)
     {
         timeoutms = 0;
     }
     else
     {
-        timeoutms -= 500;
+        timeoutms -= 1000;
     }
 
     if (remain_timeoutms)
@@ -647,7 +647,7 @@ esp8266at_err_t esp8266at_cmd_at_cipsend(esp8266at_t *esp8266at, uint8_t *buffer
     do
     {
         sprintf(esp8266at->cmd_buf, "AT+CIPSEND=%lu\r\n", length);
-        err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->cmd_buf, "OK\r\n>", timeoutms, &timeoutms);
+        err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->cmd_buf, ">", timeoutms, &timeoutms);
         if (err != ESP8266AT_ERR_OK)
         {
             break;
