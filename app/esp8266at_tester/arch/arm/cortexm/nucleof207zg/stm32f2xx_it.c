@@ -141,7 +141,10 @@ void PendSV_Handler(void)
   */
 void SysTick_Handler(void)
 {
+#if defined(UBINOS_PRESENT)
+#else
     HAL_IncTick();
+#endif /* defined(UBINOS_PRESENT) */
 }
 
 /******************************************************************************/

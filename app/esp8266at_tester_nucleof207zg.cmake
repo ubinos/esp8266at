@@ -6,6 +6,8 @@
 
 set_cache(UBINOS__UBICLIB__EXCLUDE_CLI FALSE BOOL)
 
+set_cache(UBINOS__UBIK__TICK_TYPE "RTC" STRING)
+
 include(${PROJECT_UBINOS_DIR}/config/ubinos_nucleof207zg.cmake)
 
 include(${PROJECT_LIBRARY_DIR}/stm32cubef2_wrapper/config/stm32cubef2.cmake)
