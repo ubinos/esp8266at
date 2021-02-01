@@ -116,7 +116,7 @@ esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at) {
     r = semb_create(&esp8266at->io_write_sem);
     assert(r == 0);
 
-    _g_esp8266at_uart.Instance = USARTx;
+    _g_esp8266at_uart.Instance = ESP8266_USART;
     _g_esp8266at_uart.Init.BaudRate = 115200;
     _g_esp8266at_uart.Init.WordLength = UART_WORDLENGTH_8B;
     _g_esp8266at_uart.Init.StopBits = UART_STOPBITS_1;
