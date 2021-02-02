@@ -6,6 +6,7 @@
 
 #include <ubinos.h>
 
+#if (INCLUDE__ESP8266AT == 1)
 #if (UBINOS__BSP__STM32_STM32XXXX == 1)
 
 #if (INCLUDE__UBINOS__UBIK != 1)
@@ -26,7 +27,7 @@ void esp8266at_io_tx_callback(void);
 
 extern esp8266at_t _g_esp8266at;
 
-UART_HandleTypeDef _g_esp8266at_uart;
+extern UART_HandleTypeDef ESP8266_UART_HANDLE;
 
 void esp8266at_io_rx_callback(void)
 {
@@ -59,7 +60,7 @@ void esp8266at_io_rx_callback(void)
         }
 
         buf = cbuf_get_tail_addr(rbuf);
-        HAL_UART_Receive_IT(&_g_esp8266at_uart, buf, len);
+        HAL_UART_Receive_IT(&ESP8266_UART_HANDLE, buf, len);
     } while (0);
 }
 
@@ -80,7 +81,7 @@ void esp8266at_io_tx_callback(void)
         {
             buf = cbuf_get_head_addr(wbuf);
             len = 1;
-            HAL_UART_Transmit_IT(&_g_esp8266at_uart, buf, len);
+            HAL_UART_Transmit_IT(&ESP8266_UART_HANDLE, buf, len);
         }
         else
         {
@@ -116,22 +117,22 @@ esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at) {
     r = semb_create(&esp8266at->io_write_sem);
     assert(r == 0);
 
-    _g_esp8266at_uart.Instance = ESP8266_USART;
-    _g_esp8266at_uart.Init.BaudRate = 115200;
-    _g_esp8266at_uart.Init.WordLength = UART_WORDLENGTH_8B;
-    _g_esp8266at_uart.Init.StopBits = UART_STOPBITS_1;
-    _g_esp8266at_uart.Init.Parity = UART_PARITY_NONE;
-    _g_esp8266at_uart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    _g_esp8266at_uart.Init.Mode = UART_MODE_TX_RX;
-    _g_esp8266at_uart.Init.OverSampling = UART_OVERSAMPLING_16;
-    stm_err = HAL_UART_Init(&_g_esp8266at_uart);
+    ESP8266_UART_HANDLE.Instance = ESP8266_UART;
+    ESP8266_UART_HANDLE.Init.BaudRate = 115200;
+    ESP8266_UART_HANDLE.Init.WordLength = UART_WORDLENGTH_8B;
+    ESP8266_UART_HANDLE.Init.StopBits = UART_STOPBITS_1;
+    ESP8266_UART_HANDLE.Init.Parity = UART_PARITY_NONE;
+    ESP8266_UART_HANDLE.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    ESP8266_UART_HANDLE.Init.Mode = UART_MODE_TX_RX;
+    ESP8266_UART_HANDLE.Init.OverSampling = UART_OVERSAMPLING_16;
+    stm_err = HAL_UART_Init(&ESP8266_UART_HANDLE);
     assert(stm_err == HAL_OK);
 
     if (!cbuf_is_full(esp8266at->io_read_buf))
     {
         buf = cbuf_get_tail_addr(esp8266at->io_read_buf);
         len = 1;
-        HAL_UART_Receive_IT(&_g_esp8266at_uart, buf, len);
+        HAL_UART_Receive_IT(&ESP8266_UART_HANDLE, buf, len);
     }
 
     esp_err = ESP8266AT_ERR_OK;
@@ -148,7 +149,7 @@ esp8266at_err_t esp8266at_io_deinit(esp8266at_t *esp8266at)
     (void) r;
     (void) ubi_err;
 
-    HAL_UART_DeInit(&_g_esp8266at_uart);
+    HAL_UART_DeInit(&ESP8266_UART_HANDLE);
 
     r = mutex_delete(&esp8266at->io_mutex);
     assert(r == 0);
@@ -458,7 +459,7 @@ esp8266at_err_t esp8266at_io_write_advan(esp8266at_t *esp8266at, uint8_t *buffer
                 esp8266at->tx_busy = 1;
                 for (uint32_t i = 0;; i++)
                 {
-                    if (HAL_UART_Transmit_IT(&_g_esp8266at_uart, buf, len) == HAL_OK)
+                    if (HAL_UART_Transmit_IT(&ESP8266_UART_HANDLE, buf, len) == HAL_OK)
                     {
                         break;
                     }
@@ -492,4 +493,5 @@ esp8266at_err_t esp8266at_io_write_advan(esp8266at_t *esp8266at, uint8_t *buffer
 }
 
 #endif /* (UBINOS__BSP__STM32_STM32XXXX == 1) */
+#endif /* (INCLUDE__ESP8266AT == 1) */
 

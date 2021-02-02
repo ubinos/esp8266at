@@ -6,6 +6,7 @@
 
 #include <ubinos.h>
 
+#if (INCLUDE__ESP8266AT == 1)
 #if (UBINOS__BSP__NRF52_NRF52XXX == 1)
 
 #if (INCLUDE__UBINOS__UBIK != 1)
@@ -501,4 +502,5 @@ esp8266at_err_t esp8266at_io_write_advan(esp8266at_t *esp8266at, uint8_t *buffer
 }
 
 #endif /* (UBINOS__BSP__NRF52_NRF52XXX == 1) */
+#endif /* (INCLUDE__ESP8266AT == 1) */
 

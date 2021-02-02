@@ -35,7 +35,7 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-extern UART_HandleTypeDef _g_esp8266at_uart;
+extern UART_HandleTypeDef ESP8266_UART_HANDLE;
 extern void esp8266at_io_rx_callback(void);
 extern void esp8266at_io_tx_callback(void);
 
@@ -161,9 +161,9 @@ void SysTick_Handler(void)
   * @Note   This function is redefined in "main.h" and related to DMA
   *         used for USART data transmission
   */
-void ESP8266_USART_IRQHandler(void)
+void ESP8266_UART_IRQHandler(void)
 {
-  HAL_UART_IRQHandler(&_g_esp8266at_uart);
+  HAL_UART_IRQHandler(&ESP8266_UART_HANDLE);
 }
 
 /**
@@ -177,14 +177,14 @@ void ESP8266_USART_IRQHandler(void)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
-	if (UartHandle->Instance == ESP8266_USART) {
+	if (UartHandle->Instance == ESP8266_UART) {
 		esp8266at_io_rx_callback();
 	}
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
-    if (UartHandle->Instance == ESP8266_USART) {
+    if (UartHandle->Instance == ESP8266_UART) {
         esp8266at_io_tx_callback();
     }
 }

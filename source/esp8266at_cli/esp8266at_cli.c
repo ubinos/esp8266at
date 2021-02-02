@@ -12,6 +12,8 @@
 #include <esp8266at.h>
 #include <esp8266at_cli.h>
 
+#if (INCLUDE__ESP8266AT == 1)
+
 #include "../../source/esp8266at/esp8266at_io.h"
 
 #undef LOGM_CATEGORY
@@ -568,4 +570,6 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
 
     return r;
 }
+
+#endif /* (INCLUDE__ESP8266AT == 1) */
 

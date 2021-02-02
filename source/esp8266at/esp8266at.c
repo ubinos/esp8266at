@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <esp8266at.h>
 
+#if (INCLUDE__ESP8266AT == 1)
+
 #include "esp8266at_io.h"
 
 #undef LOGM_CATEGORY
@@ -747,4 +749,6 @@ esp8266at_err_t esp8266at_cmd_at_ciprecv(esp8266at_t *esp8266at, uint8_t *buffer
 
     return err;
 }
+
+#endif /* (INCLUDE__ESP8266AT == 1) */
 
