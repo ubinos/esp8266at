@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <esp8266at.h>
 #include <esp8266at_cli.h>
 
@@ -19,6 +20,7 @@
 #include "main.h"
 
 UART_HandleTypeDef ESP8266_UART_HANDLE;
+UART_HandleTypeDef DTTY_STM32_UART_HANDLE;
 
 #endif /* (UBINOS__BSP__STM32_STM32XXXX == 1) */
 

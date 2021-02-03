@@ -41,4 +41,3 @@ file(GLOB_RECURSE _tmp_sources
 
 set(PROJECT_APP_SOURCES ${PROJECT_APP_SOURCES} ${_tmp_sources})
 
-

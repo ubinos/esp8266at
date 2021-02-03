@@ -13,4 +13,3 @@ include_directories(${_tmp_source_dir})
 
 set(PROJECT_APP_SOURCES ${PROJECT_APP_SOURCES} "${_tmp_source_dir}/esp8266at_tester.c")
 
-

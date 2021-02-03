@@ -115,6 +115,28 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
   /* NVIC for USART */
   HAL_NVIC_SetPriority(ESP8266_UART_IRQn, 8, 0);
   HAL_NVIC_EnableIRQ(ESP8266_UART_IRQn);
+
+  //
+  DTTY_STM32_UART_TX_GPIO_CLK_ENABLE();
+  DTTY_STM32_UART_RX_GPIO_CLK_ENABLE();
+
+  DTTY_STM32_UART_CLK_ENABLE();
+
+  GPIO_InitStruct.Pin       = DTTY_STM32_UART_TX_Pin;
+  GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull      = GPIO_PULLUP;
+  GPIO_InitStruct.Speed     = GPIO_SPEED_HIGH;
+  GPIO_InitStruct.Alternate = DTTY_STM32_UART_TX_AF;
+
+  HAL_GPIO_Init(DTTY_STM32_UART_TX_GPIO_Port, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = DTTY_STM32_UART_RX_Pin;
+  GPIO_InitStruct.Alternate = DTTY_STM32_UART_RX_AF;
+
+  HAL_GPIO_Init(DTTY_STM32_UART_RX_GPIO_Port, &GPIO_InitStruct);
+
+  HAL_NVIC_SetPriority(DTTY_STM32_UART_IRQn, 8, 0);
+  HAL_NVIC_EnableIRQ(DTTY_STM32_UART_IRQn);
 }
 
 /**
@@ -127,6 +149,14 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
   */
 void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
 {
+  DTTY_STM32_UART_FORCE_RESET();
+  DTTY_STM32_UART_RELEASE_RESET();
+
+  HAL_GPIO_DeInit(DTTY_STM32_UART_TX_GPIO_Port, DTTY_STM32_UART_TX_Pin);
+  HAL_GPIO_DeInit(DTTY_STM32_UART_RX_GPIO_Port, DTTY_STM32_UART_RX_Pin);
+
+  HAL_NVIC_DisableIRQ(DTTY_STM32_UART_IRQn);
+
   /*##-1- Reset peripherals ##################################################*/
   ESP8266_UART_FORCE_RESET();
   ESP8266_UART_RELEASE_RESET();

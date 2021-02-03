@@ -19,15 +19,7 @@
 
 #include "main.h"
 
-#undef LOGM_CATEGORY
-#define LOGM_CATEGORY LOGM_CATEGORY__USER00
-
-void esp8266at_io_rx_callback(void);
-void esp8266at_io_tx_callback(void);
-
 extern esp8266at_t _g_esp8266at;
-
-extern UART_HandleTypeDef ESP8266_UART_HANDLE;
 
 void esp8266at_io_rx_callback(void)
 {

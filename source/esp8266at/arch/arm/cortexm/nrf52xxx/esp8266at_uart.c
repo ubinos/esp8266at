@@ -20,9 +20,6 @@
 #include "bsp.h"
 #include "nrf_drv_uart.h"
 
-#undef LOGM_CATEGORY
-#define LOGM_CATEGORY LOGM_CATEGORY__USER00
-
 extern esp8266at_t _g_esp8266at;
 
 static nrf_drv_uart_t _g_esp8266at_uart = NRF_DRV_UART_INSTANCE(1);
