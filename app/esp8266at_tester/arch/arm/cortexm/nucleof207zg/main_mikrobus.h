@@ -62,6 +62,10 @@
 #define ESP8266_NCS_Pin                         GPIO_PIN_15
 #define ESP8266_NCS_GPIO_CLK_ENABLE()           __HAL_RCC_GPIOD_CLK_ENABLE()
 
+extern UART_HandleTypeDef ESP8266_UART_HANDLE;
+extern void esp8266at_io_rx_callback(void);
+extern void esp8266at_io_tx_callback(void);
+
 /* Definition for DTTY_STM32_UART */
 #define DTTY_STM32_UART                         USART3
 #define DTTY_STM32_UART_HANDLE                  huart3
@@ -83,16 +87,12 @@
 #define DTTY_STM32_UART_IRQn                    USART3_IRQn
 #define DTTY_STM32_UART_IRQHandler              USART3_IRQHandler
 
-/* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
-
-extern UART_HandleTypeDef ESP8266_UART_HANDLE;
-extern void esp8266at_io_rx_callback(void);
-extern void esp8266at_io_tx_callback(void);
-
 extern UART_HandleTypeDef DTTY_STM32_UART_HANDLE;
 extern void dtty_stm32_uart_rx_callback(void);
 extern void dtty_stm32_uart_tx_callback(void);
+
+/* Exported macro ------------------------------------------------------------*/
+/* Exported functions ------------------------------------------------------- */
 
 #endif /* __MAIN_H */
 

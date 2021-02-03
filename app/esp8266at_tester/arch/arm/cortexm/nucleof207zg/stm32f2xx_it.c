@@ -199,11 +199,6 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
 {
-//	HAL_UART_DeInit(UartHandle);
-//
-//	while (1)
-//	{
-//	}
 }
 
 /**
