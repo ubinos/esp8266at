@@ -19,9 +19,7 @@ set_cache(NRF5SDK__NRFX_UARTE0_ENABLED TRUE BOOL)
 set_cache(NRF5SDK__NRFX_UARTE1_ENABLED TRUE BOOL)
 
 include(${PROJECT_UBINOS_DIR}/config/ubinos_nrf52840dk.cmake)
-
 include(${PROJECT_LIBRARY_DIR}/nrf5sdk_wrapper/config/nrf5sdk.cmake)
-
 include(${PROJECT_LIBRARY_DIR}/esp8266at/config/esp8266at.cmake)
 
 include(${CMAKE_CURRENT_LIST_DIR}/esp8266at_tester.cmake)

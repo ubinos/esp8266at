@@ -17,10 +17,7 @@
 
 #include "../../../../esp8266at_io.h"
 
-#include "bsp.h"
-#include "nrf_drv_uart.h"
-
-extern esp8266at_t _g_esp8266at;
+#include "main.h"
 
 static nrf_drv_uart_t _g_esp8266at_uart = NRF_DRV_UART_INSTANCE(1);
 

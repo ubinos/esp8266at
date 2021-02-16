@@ -15,11 +15,7 @@
 #include <esp8266at.h>
 #include <esp8266at_cli.h>
 
-#if (UBINOS__BSP__STM32_STM32XXXX == 1)
-
 #include "main.h"
-
-#endif /* (UBINOS__BSP__STM32_STM32XXXX == 1) */
 
 static void rootfunc(void *arg);
 
