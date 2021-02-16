@@ -24,54 +24,20 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f2xx_hal.h"
 #include "stm32f2xx_nucleo_144.h"
-#include "stdio.h"
 
 #include <esp8266at.h>
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-/* User can use this section to tailor USARTx/UARTx instance used and associated
-   resources */
-
-/* Definition for ESP8266 */
-#define ESP8266_UART                            USART2
-#define ESP8266_UART_HANDLE                     huart2
-
-#define ESP8266_UART_CLK_ENABLE()               __HAL_RCC_USART2_CLK_ENABLE();
-#define ESP8266_UART_RX_GPIO_CLK_ENABLE()       __HAL_RCC_GPIOD_CLK_ENABLE()
-#define ESP8266_UART_TX_GPIO_CLK_ENABLE()       __HAL_RCC_GPIOD_CLK_ENABLE()
-
-#define ESP8266_UART_FORCE_RESET()              __HAL_RCC_USART2_FORCE_RESET()
-#define ESP8266_UART_RELEASE_RESET()            __HAL_RCC_USART2_RELEASE_RESET()
-
-#define ESP8266_UART_TX_Pin                     GPIO_PIN_5
-#define ESP8266_UART_TX_GPIO_Port               GPIOD
-#define ESP8266_UART_TX_AF                      GPIO_AF7_USART2
-#define ESP8266_UART_RX_Pin                     GPIO_PIN_6
-#define ESP8266_UART_RX_GPIO_Port               GPIOD
-#define ESP8266_UART_RX_AF                      GPIO_AF7_USART2
-
-#define ESP8266_UART_IRQn                       USART2_IRQn
-#define ESP8266_UART_IRQHandler                 USART2_IRQHandler
-
-#define ESP8266_NRST_GPIO_Port                  GPIOD
-#define ESP8266_NRST_Pin                        GPIO_PIN_7
-#define ESP8266_NRST_GPIO_CLK_ENABLE()          __HAL_RCC_GPIOD_CLK_ENABLE()
-
-#define ESP8266_NCS_GPIO_Port                   GPIOD
-#define ESP8266_NCS_Pin                         GPIO_PIN_4
-#define ESP8266_NCS_GPIO_CLK_ENABLE()           __HAL_RCC_GPIOD_CLK_ENABLE()
-
-extern UART_HandleTypeDef ESP8266_UART_HANDLE;
-
-void esp8266at_io_rx_callback(void);
-void esp8266at_io_tx_callback(void);
+/* Exported macro ------------------------------------------------------------*/
+/* Exported functions ------------------------------------------------------- */
 
 /* Definition for DTTY_STM32_UART */
+
 #define DTTY_STM32_UART                         USART3
 #define DTTY_STM32_UART_HANDLE                  huart3
 
-#define DTTY_STM32_UART_CLK_ENABLE()            __HAL_RCC_USART3_CLK_ENABLE();
+#define DTTY_STM32_UART_CLK_ENABLE()            __HAL_RCC_USART3_CLK_ENABLE()
 #define DTTY_STM32_UART_RX_GPIO_CLK_ENABLE()    __HAL_RCC_GPIOD_CLK_ENABLE()
 #define DTTY_STM32_UART_TX_GPIO_CLK_ENABLE()    __HAL_RCC_GPIOD_CLK_ENABLE()
 
@@ -92,9 +58,53 @@ extern UART_HandleTypeDef DTTY_STM32_UART_HANDLE;
 
 void dtty_stm32_uart_rx_callback(void);
 void dtty_stm32_uart_tx_callback(void);
+void dtty_stm32_uart_err_callback(void);
 
-/* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
+/* Definition for ESP8266_UART */
+
+#define ESP8266_UART                            USART2
+#define ESP8266_UART_HANDLE                     huart2
+
+#define ESP8266_UART_CLK_ENABLE()               __HAL_RCC_USART2_CLK_ENABLE()
+#define ESP8266_UART_RX_GPIO_CLK_ENABLE()       __HAL_RCC_GPIOD_CLK_ENABLE()
+#define ESP8266_UART_TX_GPIO_CLK_ENABLE()       __HAL_RCC_GPIOD_CLK_ENABLE()
+
+#define ESP8266_UART_FORCE_RESET()              __HAL_RCC_USART2_FORCE_RESET()
+#define ESP8266_UART_RELEASE_RESET()            __HAL_RCC_USART2_RELEASE_RESET()
+
+#define ESP8266_UART_TX_Pin                     GPIO_PIN_5
+#define ESP8266_UART_TX_GPIO_Port               GPIOD
+#define ESP8266_UART_TX_AF                      GPIO_AF7_USART2
+#define ESP8266_UART_RX_Pin                     GPIO_PIN_6
+#define ESP8266_UART_RX_GPIO_Port               GPIOD
+#define ESP8266_UART_RX_AF                      GPIO_AF7_USART2
+
+#define ESP8266_UART_IRQn                       USART2_IRQn
+#define ESP8266_UART_IRQHandler                 USART2_IRQHandler
+
+extern UART_HandleTypeDef ESP8266_UART_HANDLE;
+
+void esp8266_uart_rx_callback(void);
+void esp8266_uart_tx_callback(void);
+void esp8266_uart_err_callback(void);
+
+/* Definition for ESP8266_NRST */
+
+#define ESP8266_NRST_GPIO_CLK_ENABLE()          __HAL_RCC_GPIOD_CLK_ENABLE()
+
+#define ESP8266_NRST_Pin                        GPIO_PIN_7
+#define ESP8266_NRST_GPIO_Port                  GPIOD
+
+/* Definition for ESP8266_CS */
+
+#define ESP8266_CS_GPIO_CLK_ENABLE()            __HAL_RCC_GPIOD_CLK_ENABLE()
+
+#define ESP8266_CS_Pin                          GPIO_PIN_4
+#define ESP8266_CS_GPIO_Port                    GPIOD
+
+/* Definition for esp8266at */
+
+extern esp8266at_t _g_esp8266at;
 
 #endif /* __MAIN_H */
 
