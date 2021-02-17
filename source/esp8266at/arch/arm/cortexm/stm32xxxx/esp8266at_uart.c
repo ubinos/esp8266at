@@ -40,6 +40,8 @@ static void esp8266_uart_reset(void)
     stm_err = HAL_UART_Init(&ESP8266_UART_HANDLE);
     assert(stm_err == HAL_OK);
 
+    HAL_NVIC_SetPriority(ESP8266_UART_IRQn, NVIC_PRIO_MIDDLE, 0);
+
     /* Assert reset pin */
     HAL_GPIO_WritePin(ESP8266_NRST_GPIO_Port, ESP8266_NRST_Pin, GPIO_PIN_RESET);
     /* Assert chip select pin */
