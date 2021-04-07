@@ -24,7 +24,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f2xx_hal.h"
 #include "stm32f2xx_nucleo_144.h"
-#include "stdio.h"
 
 #include <esp8266at.h>
 

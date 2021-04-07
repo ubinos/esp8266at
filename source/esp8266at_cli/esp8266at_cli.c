@@ -362,7 +362,10 @@ int esp8266at_cli_at_conn(esp8266at_t *esp8266at, char *str, int len, void *arg)
         cmdlen = strlen(cmd);
         if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
         {
-            esp8266at_cli_at_conn_recv(esp8266at);
+            tmpstr = &tmpstr[cmdlen];
+            tmplen -= cmdlen;
+
+            esp8266at_cli_at_conn_recv(esp8266at, tmpstr, tmplen, arg);
             r = 0;
             break;
         }
@@ -413,13 +416,21 @@ int esp8266at_cli_at_conn_send(esp8266at_t *esp8266at, char *str, int len, void 
     return 0;
 }
 
-void esp8266at_cli_at_conn_recv(esp8266at_t *esp8266at)
+void esp8266at_cli_at_conn_recv(esp8266at_t *esp8266at, char *str, int len, void *arg)
 {
     esp8266at_err_t err;
+    uint32_t read_len;
     uint32_t read = 0;
 
-    err = esp8266at_cmd_at_ciprecv(esp8266at, _recv_buf, ESP8266AT_RECV_BUFFER_SIZE, &read, _timeoutms, NULL);
-    _recv_buf[read] = 0;
+    do
+    {
+        sscanf(str, "%lu", &read_len);
+        err = esp8266at_cmd_at_ciprecv(esp8266at, _recv_buf, read_len, &read, _timeoutms, NULL);
+        _recv_buf[read] = 0;
+
+        break;
+    } while (1);
+
 
     printf("\"%s\"\n", (char*) _recv_buf);
 
@@ -517,7 +528,7 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
             }
 
             printf("\n---- Receive message ----\n");
-            err = esp8266at_cmd_at_ciprecv(esp8266at, _recv_buf, ESP8266AT_RECV_BUFFER_SIZE, &read, _timeoutms, NULL);
+            err = esp8266at_cmd_at_ciprecv(esp8266at, _recv_buf, msglen, &read, _timeoutms, NULL);
             if (err != ESP8266AT_ERR_OK)
             {
                 break;

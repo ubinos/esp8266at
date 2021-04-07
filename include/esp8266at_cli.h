@@ -41,7 +41,7 @@ int esp8266at_cli_at_conn(esp8266at_t *esp8266at, char *str, int len, void *arg)
 int esp8266at_cli_at_conn_open(esp8266at_t *esp8266at, char *str, int len, void *arg);
 void esp8266at_cli_at_conn_close(esp8266at_t *esp8266at);
 int esp8266at_cli_at_conn_send(esp8266at_t *esp8266at, char *str, int len, void *arg);
-void esp8266at_cli_at_conn_recv(esp8266at_t *esp8266at);
+void esp8266at_cli_at_conn_recv(esp8266at_t *esp8266at, char *str, int len, void *arg);
 
 int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *arg);
 

@@ -5,6 +5,9 @@
  */
 
 #include <ubinos.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #if (INCLUDE__ESP8266AT == 1)
 #if (UBINOS__BSP__STM32_STM32XXXX == 1)
@@ -19,50 +22,42 @@
 
 #include "main.h"
 
-static void esp8266_uart_reset(void);
+static const char * _data_key = ESP8266AT_IO_DATA_KEY;
 
-static void esp8266_uart_reset(void)
-{
-    HAL_StatusTypeDef stm_err;
-
-    ESP8266_UART_HANDLE.Instance = ESP8266_UART;
-    ESP8266_UART_HANDLE.Init.BaudRate = 115200;
-    ESP8266_UART_HANDLE.Init.WordLength = UART_WORDLENGTH_8B;
-    ESP8266_UART_HANDLE.Init.StopBits = UART_STOPBITS_1;
-    ESP8266_UART_HANDLE.Init.Parity = UART_PARITY_NONE;
-    ESP8266_UART_HANDLE.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    ESP8266_UART_HANDLE.Init.Mode = UART_MODE_TX_RX;
-    ESP8266_UART_HANDLE.Init.OverSampling = UART_OVERSAMPLING_16;
-
-    stm_err = HAL_UART_DeInit(&ESP8266_UART_HANDLE);
-    assert(stm_err == HAL_OK);
-
-    stm_err = HAL_UART_Init(&ESP8266_UART_HANDLE);
-    assert(stm_err == HAL_OK);
-
-    HAL_NVIC_SetPriority(ESP8266_UART_IRQn, NVIC_PRIO_MIDDLE, 0);
-
-    /* Assert reset pin */
-    HAL_GPIO_WritePin(ESP8266_NRST_GPIO_Port, ESP8266_NRST_Pin, GPIO_PIN_RESET);
-    /* Assert chip select pin */
-    HAL_GPIO_WritePin(ESP8266_CS_GPIO_Port, ESP8266_CS_Pin, GPIO_PIN_SET);
-    HAL_Delay(100);
-    /* Deassert reset pin */
-    HAL_GPIO_WritePin(ESP8266_NRST_GPIO_Port, ESP8266_NRST_Pin, GPIO_PIN_SET);
-    HAL_Delay(500);
-}
+static void esp8266at_uart_reset(void);
 
 void esp8266_uart_rx_callback(void)
 {
     int need_signal = 0;
     uint8_t *buf;
     uint32_t len;
-    cbuf_pt rbuf = _g_esp8266at.io_read_buf;
-    sem_pt rsem = _g_esp8266at.io_read_sem;
+    cbuf_pt rbuf;
+    sem_pt rsem;
 
-    do
+    len = ESP8266AT_IO_TEMP_RX_BUF_SIZE;
+    buf = _g_esp8266at.io_temp_rx_buf;
+
+    switch (_g_esp8266at.io_rx_mode)
     {
-        len = 1;
+    case ESP8266AT_IO_RX_MODE_RESP:
+        rbuf = _g_esp8266at.io_read_buf;
+        rsem = _g_esp8266at.io_read_sem;
+
+        if (_data_key[_g_esp8266at.io_data_key_i] == buf[0])
+        {
+            _g_esp8266at.io_data_key_i++;
+        }
+        else
+        {
+            _g_esp8266at.io_data_key_i = 0;
+        }
+        if (_g_esp8266at.io_data_key_i == ESP8266AT_IO_DATA_KEY_LEN)
+        {
+            _g_esp8266at.io_data_len = 0;
+            _g_esp8266at.io_data_len_i = 0;
+            _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_DATA_LEN;
+            break;
+        }
 
         if (cbuf_is_full(rbuf))
         {
@@ -75,16 +70,86 @@ void esp8266_uart_rx_callback(void)
             need_signal = 1;
         }
 
-        cbuf_write(rbuf, NULL, len, NULL);
+        cbuf_write(rbuf, buf, len, NULL);
 
         if (need_signal && _bsp_kernel_active)
         {
             sem_give(rsem);
         }
 
-        buf = cbuf_get_tail_addr(rbuf);
-        HAL_UART_Receive_IT(&ESP8266_UART_HANDLE, buf, len);
-    } while (0);
+        break;
+
+    case ESP8266AT_IO_RX_MODE_DATA_LEN:
+        rbuf = _g_esp8266at.io_read_buf;
+        rsem = _g_esp8266at.io_read_sem;
+
+        if (':' == buf[0])
+        {
+            _g_esp8266at.io_data_len_buf[_g_esp8266at.io_data_len_i] = 0;
+            _g_esp8266at.io_data_len = atoi((char*) _g_esp8266at.io_data_len_buf);
+            if (_g_esp8266at.io_data_len > ESP8266AT_IO_DATA_LEN_MAX)
+            {
+                _g_esp8266at.io_data_key_i = 0;
+                _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
+                break;
+            }
+
+            _g_esp8266at.io_data_read = 0;
+            _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_DATA;
+            break;
+        }
+
+        if (_g_esp8266at.io_data_len_i >= ESP8266AT_IO_DATA_LEN_BUF_SIZE - 1)
+        {
+            _g_esp8266at.io_data_key_i = 0;
+            _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
+            break;
+        }
+
+        _g_esp8266at.io_data_len_buf[_g_esp8266at.io_data_len_i] = buf[0];
+        _g_esp8266at.io_data_len_i++;
+
+        break;
+
+    case ESP8266AT_IO_RX_MODE_DATA:
+        rbuf = _g_esp8266at.io_data_buf;
+        rsem = _g_esp8266at.io_data_read_sem;
+
+        _g_esp8266at.io_data_read += len;
+
+        if (cbuf_is_full(rbuf))
+        {
+            _g_esp8266at.rx_overflow_count++;
+
+            if (_g_esp8266at.io_data_read >= _g_esp8266at.io_data_len)
+            {
+                _g_esp8266at.io_data_key_i = 0;
+                _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
+            }
+            break;
+        }
+
+        if (cbuf_get_len(rbuf) == 0)
+        {
+            need_signal = 1;
+        }
+
+        cbuf_write(rbuf, buf, len, NULL);
+
+        if (need_signal && _bsp_kernel_active)
+        {
+            sem_give(rsem);
+        }
+        if (_g_esp8266at.io_data_read >= _g_esp8266at.io_data_len)
+        {
+            _g_esp8266at.io_data_key_i = 0;
+            _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
+        }
+
+        break;
+    }
+
+    HAL_UART_Receive_IT(&ESP8266_UART_HANDLE, buf, len);
 }
 
 void esp8266_uart_tx_callback(void)
@@ -118,40 +183,47 @@ void esp8266_uart_err_callback(void)
 {
 }
 
+static void esp8266at_uart_reset(void)
+{
+    HAL_StatusTypeDef stm_err;
+
+    ESP8266_UART_HANDLE.Instance = ESP8266_UART;
+    ESP8266_UART_HANDLE.Init.BaudRate = 115200;
+    ESP8266_UART_HANDLE.Init.WordLength = UART_WORDLENGTH_8B;
+    ESP8266_UART_HANDLE.Init.StopBits = UART_STOPBITS_1;
+    ESP8266_UART_HANDLE.Init.Parity = UART_PARITY_NONE;
+    ESP8266_UART_HANDLE.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    ESP8266_UART_HANDLE.Init.Mode = UART_MODE_TX_RX;
+    ESP8266_UART_HANDLE.Init.OverSampling = UART_OVERSAMPLING_16;
+
+    stm_err = HAL_UART_DeInit(&ESP8266_UART_HANDLE);
+    assert(stm_err == HAL_OK);
+
+    stm_err = HAL_UART_Init(&ESP8266_UART_HANDLE);
+    assert(stm_err == HAL_OK);
+
+    HAL_NVIC_SetPriority(ESP8266_UART_IRQn, NVIC_PRIO_MIDDLE, 0);
+
+    /* Assert reset pin */
+    HAL_GPIO_WritePin(ESP8266_NRST_GPIO_Port, ESP8266_NRST_Pin, GPIO_PIN_RESET);
+    /* Assert chip select pin */
+    HAL_GPIO_WritePin(ESP8266_CS_GPIO_Port, ESP8266_CS_Pin, GPIO_PIN_SET);
+    HAL_Delay(100);
+    /* Deassert reset pin */
+    HAL_GPIO_WritePin(ESP8266_NRST_GPIO_Port, ESP8266_NRST_Pin, GPIO_PIN_SET);
+    HAL_Delay(500);
+}
+
 esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at)
 {
     esp8266at_err_t esp_err;
-    ubi_err_t ubi_err;
-    HAL_StatusTypeDef stm_err;
-    int r;
-    uint8_t *buf;
-    uint32_t len;
     assert(esp8266at != NULL);
-    (void) r;
-    (void) ubi_err;
-    (void) stm_err;
 
-    esp8266at->rx_overflow_count = 0;
-    esp8266at->tx_busy = 0;
-
-    ubi_err = cbuf_create(&esp8266at->io_read_buf, ESP8266AT_IO_READ_BUF_SIZE);
-    assert(ubi_err == UBI_ERR_OK);
-    ubi_err = cbuf_create(&esp8266at->io_write_buf, ESP8266AT_IO_WRITE_BUF_SIZE);
-    assert(ubi_err == UBI_ERR_OK);
-    r = mutex_create(&esp8266at->io_mutex);
-    assert(r == 0);
-    r = semb_create(&esp8266at->io_read_sem);
-    assert(r == 0);
-    r = semb_create(&esp8266at->io_write_sem);
-    assert(r == 0);
-
-    esp8266_uart_reset();
+    esp8266at_uart_reset();
 
     if (!cbuf_is_full(esp8266at->io_read_buf))
     {
-        buf = cbuf_get_tail_addr(esp8266at->io_read_buf);
-        len = 1;
-        HAL_UART_Receive_IT(&ESP8266_UART_HANDLE, buf, len);
+        HAL_UART_Receive_IT(&ESP8266_UART_HANDLE, esp8266at->io_temp_rx_buf, ESP8266AT_IO_TEMP_RX_BUF_SIZE);
     }
 
     esp_err = ESP8266AT_ERR_OK;
@@ -162,24 +234,9 @@ esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at)
 esp8266at_err_t esp8266at_io_deinit(esp8266at_t *esp8266at)
 {
     esp8266at_err_t esp_err;
-    ubi_err_t ubi_err;
-    int r;
     assert(esp8266at != NULL);
-    (void) r;
-    (void) ubi_err;
 
     HAL_UART_DeInit(&ESP8266_UART_HANDLE);
-
-    r = mutex_delete(&esp8266at->io_mutex);
-    assert(r == 0);
-    r = sem_delete(&esp8266at->io_read_sem);
-    assert(r == 0);
-    r = sem_delete(&esp8266at->io_write_sem);
-    assert(r == 0);
-    ubi_err = cbuf_delete(&esp8266at->io_read_buf);
-    assert(ubi_err == UBI_ERR_OK);
-    ubi_err = cbuf_delete(&esp8266at->io_write_buf);
-    assert(ubi_err == UBI_ERR_OK);
 
     esp_err = ESP8266AT_ERR_OK;
 

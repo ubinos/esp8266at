@@ -24,17 +24,28 @@ extern "C"
 
 #include <stdint.h>
 
-#define ESP8266AT_IO_READ_BUF_SIZE 2048
-#define ESP8266AT_IO_WRITE_BUF_SIZE 2048
-
-#define ESP8266AT_CMD_BUFFER_SIZE 256
-#define ESP8266AT_RSP_BUFFER_SIZE 256
-
 #define ESP8266AT_VERSION_LENGTH_MAX 15
 #define ESP8266AT_IP_ADDR_LENGTH_MAX 31
 #define ESP8266AT_MAC_ADDR_LENGTH_MAX 31
 
+#define ESP8266AT_TEMP_CMD_BUF_SIZE 256
+#define ESP8266AT_TEMP_RESP_BUF_SIZE 256
+
+#define ESP8266AT_RESTART_SETUP_TIME_MS 2000
+
 #define ESP8266AT_IO_OPTION__TIMED 0x0001
+
+#define ESP8266AT_IO_DATA_KEY "+IPD,"
+#define ESP8266AT_IO_DATA_KEY_LEN 5
+#define ESP8266AT_IO_DATA_LEN_MAX 65536
+
+#define ESP8266AT_IO_TEMP_RX_BUF_SIZE 1
+#define ESP8266AT_IO_DATA_LEN_BUF_SIZE 256
+
+#define ESP8266AT_IO_READ_BUF_SIZE 2048
+#define ESP8266AT_IO_WRITE_BUF_SIZE 2048
+
+#define ESP8266AT_IO_DATA_BUF_SIZE 256
 
 typedef enum
 {
@@ -45,24 +56,45 @@ typedef enum
     ESP8266AT_ERR_IO_ERROR,
 } esp8266at_err_t;
 
+typedef enum
+{
+    ESP8266AT_IO_RX_MODE_RESP = 0,
+    ESP8266AT_IO_RX_MODE_DATA_LEN,
+    ESP8266AT_IO_RX_MODE_DATA,
+} esp8266at_io_rx_mode_t;
+
 typedef struct _esp8266at_t
 {
     char version[ESP8266AT_VERSION_LENGTH_MAX + 1];
     char ip_addr[ESP8266AT_IP_ADDR_LENGTH_MAX + 1];
     char mac_addr[ESP8266AT_MAC_ADDR_LENGTH_MAX + 1];
 
-    char cmd_buf[ESP8266AT_CMD_BUFFER_SIZE];
-    uint8_t rsp_buf[ESP8266AT_RSP_BUFFER_SIZE];
     mutex_pt cmd_mutex;
 
-    mutex_pt io_mutex;
-    sem_pt io_read_sem;
-    sem_pt io_write_sem;
-    cbuf_pt io_read_buf;
-    cbuf_pt io_write_buf;
+    char temp_cmd_buf[ESP8266AT_TEMP_CMD_BUF_SIZE];
+    uint8_t temp_resp_buf[ESP8266AT_TEMP_RESP_BUF_SIZE];
 
     uint32_t rx_overflow_count;
     uint8_t tx_busy;
+
+    mutex_pt io_mutex;
+    sem_pt io_read_sem;
+    cbuf_pt io_read_buf;
+    sem_pt io_write_sem;
+    cbuf_pt io_write_buf;
+
+    uint8_t io_temp_rx_buf[ESP8266AT_IO_TEMP_RX_BUF_SIZE];
+    uint8_t io_data_len_buf[ESP8266AT_IO_DATA_LEN_BUF_SIZE];
+
+    int io_rx_mode;
+    uint32_t io_data_key_i;
+    uint32_t io_data_len;
+    uint32_t io_data_len_i;
+    uint32_t io_data_read;
+
+    mutex_pt io_data_read_mutex;
+    sem_pt io_data_read_sem;
+    cbuf_pt io_data_buf;
 } esp8266at_t;
 
 #ifdef __cplusplus
