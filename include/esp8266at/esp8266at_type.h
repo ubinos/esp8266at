@@ -95,6 +95,8 @@ typedef struct _esp8266at_t
     mutex_pt io_data_read_mutex;
     sem_pt io_data_read_sem;
     cbuf_pt io_data_buf;
+
+    uint8_t cancel_interactive_mode;
 } esp8266at_t;
 
 #ifdef __cplusplus

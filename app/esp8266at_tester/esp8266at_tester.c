@@ -137,6 +137,7 @@ static int clihookfunc(char *str, int len, void *arg)
 
 static void clihelphookfunc()
 {
+    printf("at i                                : Interactive mode\n");
     printf("at test                             : Tests AT startup\n");
     printf("at restart                          : Restarts a module\n");
     printf("at version                          : Query version information\n");

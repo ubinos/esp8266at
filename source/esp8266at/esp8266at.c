@@ -22,6 +22,8 @@ static esp8266at_err_t _wait_rsp(esp8266at_t *esp8266at, char *rsp, uint8_t *buf
         uint32_t *remain_timeoutms);
 static esp8266at_err_t _send_cmd_and_wait_rsp(esp8266at_t *esp8266at, char *cmd, char *rsp, uint32_t timeoutms, uint32_t *remain_timeoutms);
 
+static void _esp8266at_interactive_recvfunc(void *arg);
+
 esp8266at_err_t esp8266at_init(esp8266at_t *esp8266at)
 {
     int r;
@@ -218,6 +220,98 @@ static esp8266at_err_t _send_cmd_and_wait_rsp(esp8266at_t *esp8266at, char *cmd,
 
     logmfd("send command : err = %d", err);
     logmd("send command : end");
+
+    return err;
+}
+
+static void _esp8266at_interactive_recvfunc(void *arg)
+{
+    esp8266at_t *esp8266at = (esp8266at_t *) arg;
+    uint8_t data;
+    uint32_t read;
+
+    while (esp8266at->cancel_interactive_mode == 0)
+    {
+        esp8266at_io_read_timedms(esp8266at, &data, 1, &read, 1000, NULL);
+        if (read == 1) {
+            dtty_putc(data);
+            dtty_flush();
+        }
+    }
+}
+
+esp8266at_err_t esp8266at_cmd_at_interactive(esp8266at_t *esp8266at)
+{
+    int r;
+    esp8266at_err_t err;
+    task_pt recv_task;
+    char data[2];
+    int len;
+    int old_echo;
+
+    err = ESP8266AT_ERR_ERROR;
+
+    r = mutex_lock(esp8266at->cmd_mutex);
+    if (r != 0)
+    {
+        return ESP8266AT_ERR_ERROR;
+    }
+
+    do {
+        esp8266at->cancel_interactive_mode = 0;
+        r = task_create_noautodel(&recv_task, _esp8266at_interactive_recvfunc, esp8266at, task_getmiddlepriority(), 0, "esp8266at_i_recv");
+        if (r != 0)
+        {
+            err = ESP8266AT_ERR_ERROR;
+            break;
+        }
+        old_echo = dtty_getecho();
+        dtty_setecho(0);
+
+        while (1)
+        {
+            r = dtty_getc(data);
+            len = 1;
+            if (r != 0)
+            {
+                continue;
+            }
+            if (data[0] == '\033') // ESC
+            {
+                err = ESP8266AT_ERR_OK;
+                break;
+            }
+            if (data[0] == '\r')
+            {
+                data[1] = '\n';
+                len = 2;
+            }
+
+            err = esp8266at_io_write_timedms(esp8266at, (uint8_t*) data, len, NULL, UINT32_MAX, NULL);
+            if (err != ESP8266AT_ERR_OK)
+            {
+                break;
+            }
+            err = esp8266at_io_flush_timedms(esp8266at, UINT32_MAX, NULL);
+            if (err != ESP8266AT_ERR_OK)
+            {
+                break;
+            }
+        }
+
+        dtty_setecho(old_echo);
+        esp8266at->cancel_interactive_mode = 1;
+        r = task_join_and_delete(&recv_task, NULL, 1);
+        if (r != 0)
+        {
+            err = ESP8266AT_ERR_ERROR;
+            break;
+        }
+
+        break;
+    } while (1);
+
+    mutex_unlock(esp8266at->cmd_mutex);
 
     return err;
 }

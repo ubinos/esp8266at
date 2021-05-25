@@ -24,6 +24,8 @@ extern "C"
 
 int esp8266at_cli_at(esp8266at_t *esp8266at, char *str, int len, void *arg);
 
+void esp8266at_cli_at_interactive(esp8266at_t *esp8266at);
+
 void esp8266at_cli_at_test(esp8266at_t *esp8266at);
 void esp8266at_cli_at_restart(esp8266at_t *esp8266at);
 void esp8266at_cli_at_query_version(esp8266at_t *esp8266at);

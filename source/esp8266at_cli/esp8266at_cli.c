@@ -38,6 +38,15 @@ int esp8266at_cli_at(esp8266at_t *esp8266at, char *str, int len, void *arg)
 
     do
     {
+        cmd = "i";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            esp8266at_cli_at_interactive(esp8266at);
+            r = 0;
+            break;
+        }
+
         cmd = "test";
         cmdlen = strlen(cmd);
         if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
@@ -120,6 +129,15 @@ int esp8266at_cli_at(esp8266at_t *esp8266at, char *str, int len, void *arg)
     } while (1);
 
     return r;
+}
+
+void esp8266at_cli_at_interactive(esp8266at_t *esp8266at)
+{
+    esp8266at_err_t err;
+
+    printf("start interactive mode (press ESC key to exit)\n");
+    err = esp8266at_cmd_at_interactive(esp8266at);
+    printf("result : err = %d\n", err);
 }
 
 void esp8266at_cli_at_test(esp8266at_t *esp8266at)
