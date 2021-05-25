@@ -1,0 +1,33 @@
+{
+    "editor.renderControlCharacters": true,
+    "editor.renderWhitespace": "all",
+    "terminal.integrated.tabs.enabled": true,
+    "C_Cpp.loggingLevel": "Debug",
+    "C_Cpp.default.configurationProvider": "",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/output/Default/compile_commands.json",
+    "cmake.environment": {
+        "CMAKE_SYSTEM_NAME": "Generic",
+        "CMAKE_C_COMPILER_FORCED": "TRUE",
+        "CMAKE_CXX_COMPILER_FORCED": "TRUE",
+        "PROJECT_LIBRARY_DIR": "${workspaceFolder}/..",
+        "PROJECT_CONFIG_DIR": "${workspaceFolder}/app",
+        "PROJECT_CONFIG_NAME": "esp8266at_tester_nucleof207zg",
+    },
+    "cmake.configureOnOpen": false,
+    "cmake.loggingLevel": "debug",
+    "cmake.generator": "Unix Makefiles",
+    "cmake.configureSettings": {
+        "CMAKE_SYSTEM_NAME": "${env:CMAKE_SYSTEM_NAME}",
+        "CMAKE_C_COMPILER_FORCED": "${env:CMAKE_C_COMPILER_FORCED}",
+        "CMAKE_CXX_COMPILER_FORCED": "${env:CMAKE_CXX_COMPILER_FORCED}",
+        "PROJECT_LIBRARY_DIR": "${env:PROJECT_LIBRARY_DIR}",
+        "PROJECT_CONFIG_DIR": "${env:PROJECT_CONFIG_DIR}",
+        "PROJECT_CONFIG_NAME": "${env:PROJECT_CONFIG_NAME}",
+    },
+    "cmake.sourceDirectory": "${workspaceFolder}/source",
+    "cmake.buildDirectory": "${workspaceFolder}/output/${env:PROJECT_CONFIG_NAME}",
+    "files.associations": {
+        "ubinos.h": "c",
+        "stdio.h": "c"
+    }
+}
