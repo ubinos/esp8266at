@@ -1,4 +1,5 @@
 #include <ubinos.h>
+#include <ubinos/bsp/arch.h>
 
 #if (INCLUDE__APP__esp8266at_tester == 1)
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG)
