@@ -65,7 +65,7 @@ int esp8266at_cli_at(esp8266at_t *esp8266at, char *str, int len, void *arg)
             break;
         }
 
-        cmd = "config ";
+        cmd = "c ";
         cmdlen = strlen(cmd);
         if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
         {
