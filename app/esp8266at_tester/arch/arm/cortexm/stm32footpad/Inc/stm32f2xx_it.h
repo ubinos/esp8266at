@@ -34,8 +34,6 @@ extern "C"
 
 /* Interrupt Handler */
 
-void DTTY_STM32_UART_IRQHandler(void);
-
 void ESP8266_UART_IRQHandler(void);
 
 #ifdef __cplusplus

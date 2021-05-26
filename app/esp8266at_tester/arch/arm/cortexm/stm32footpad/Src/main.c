@@ -5,6 +5,7 @@
  */
 
 #include <ubinos.h>
+#include <ubinos/bsp/arch.h>
 
 #if (INCLUDE__APP__esp8266at_tester == 1)
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG)
@@ -25,11 +26,7 @@ esp8266at_t _g_esp8266at;
  */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-    if (huart->Instance == DTTY_STM32_UART)
-    {
-        dtty_stm32_uart_tx_callback();
-    }
-    else if (huart->Instance == ESP8266_UART)
+    if (huart->Instance == ESP8266_UART)
     {
         esp8266_uart_tx_callback();
     }
@@ -44,11 +41,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    if (huart->Instance == DTTY_STM32_UART)
-    {
-        dtty_stm32_uart_rx_callback();
-    }
-    else if (huart->Instance == ESP8266_UART)
+    if (huart->Instance == ESP8266_UART)
     {
         esp8266_uart_rx_callback();
     }
@@ -63,14 +56,62 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
  */
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
-    if (huart->Instance == DTTY_STM32_UART)
-    {
-        dtty_stm32_uart_err_callback();
-    }
-    else if (huart->Instance == ESP8266_UART)
+    if (huart->Instance == ESP8266_UART)
     {
         esp8266_uart_err_callback();
     }
+}
+
+
+void power_init() {
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+	//Power Pin Init
+	WIFI_PW_EN_CLK_ENABLE();
+	Logic_PW_EN_CLK_ENABLE();
+	RF_T_EN_CLK_ENABLE();
+	RF_R_EN_CLK_ENABLE();
+
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+
+	GPIO_InitStruct.Pin = WIFI_PW_EN_PIN;
+	HAL_GPIO_Init(WIFI_PW_EN_PORT, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = Logic_PW_EN_PIN;
+	HAL_GPIO_Init(Logic_PW_EN_PORT, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = RF_T_EN_PIN;
+	HAL_GPIO_Init(RF_T_EN_PORT, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = RF_R_EN_PIN;
+	HAL_GPIO_Init(RF_R_EN_PORT, &GPIO_InitStruct);
+}
+
+void wifi_enable() {
+	HAL_GPIO_WritePin(WIFI_PW_EN_PORT, WIFI_PW_EN_PIN, GPIO_PIN_RESET); //WIFI pin init 0
+	task_sleepms(1);
+	HAL_GPIO_WritePin(WIFI_PW_EN_PORT, WIFI_PW_EN_PIN, GPIO_PIN_SET);
+}
+
+
+void logic_enable() {
+	HAL_GPIO_WritePin(Logic_PW_EN_PORT, Logic_PW_EN_PIN, GPIO_PIN_RESET); //WIFI pin init 0
+	task_sleepms(1);
+	HAL_GPIO_WritePin(Logic_PW_EN_PORT, Logic_PW_EN_PIN, GPIO_PIN_SET);
+}
+
+void rf_t_enable() {
+	HAL_GPIO_WritePin(RF_T_EN_PORT, RF_T_EN_PIN, GPIO_PIN_RESET); //WIFI pin init 0
+	task_sleepms(1);
+	HAL_GPIO_WritePin(RF_T_EN_PORT, RF_T_EN_PIN, GPIO_PIN_SET);
+}
+
+void rf_r_enable() {
+	HAL_GPIO_WritePin(RF_R_EN_PORT, RF_R_EN_PIN, GPIO_PIN_RESET); //WIFI pin init 0
+	task_sleepms(1);
+	HAL_GPIO_WritePin(RF_R_EN_PORT, RF_R_EN_PIN, GPIO_PIN_SET);
 }
 
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG) */

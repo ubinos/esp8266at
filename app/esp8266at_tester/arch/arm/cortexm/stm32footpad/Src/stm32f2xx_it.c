@@ -7,16 +7,6 @@
 #include "stm32f2xx_it.h"
 
 /**
- * @brief  This function handles DTTY_STM32_UART interrupt request.
- * @param  None
- * @retval None
- */
-void DTTY_STM32_UART_IRQHandler(void)
-{
-    HAL_UART_IRQHandler(&DTTY_STM32_UART_HANDLE);
-}
-
-/**
  * @brief  This function handles ESP8266_UART interrupt request.
  * @param  None
  * @retval None

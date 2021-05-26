@@ -45,6 +45,13 @@ static void rootfunc(void *arg)
 
 #if (UBINOS__BSP__STM32_STM32XXXX == 1)
     HAL_Init();
+
+#if (NEED_POWER_INIT == 1)
+    power_init();
+#endif
+#if (NEED_WIFI_INIT == 1)
+    wifi_enable();
+#endif
 #endif /* (UBINOS__BSP__STM32_STM32XXXX == 1) */
 
     esp8266at_init(&_g_esp8266at);
