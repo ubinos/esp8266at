@@ -1,6 +1,6 @@
 #
 # Copyright (c) 2020 Sung Ho Park and CSOS
-# 
+#
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -15,6 +15,6 @@ include(${CMAKE_CURRENT_LIST_DIR}/esp8266at.cmake)
 get_filename_component(_tmp_source_dir "${CMAKE_CURRENT_LIST_DIR}/../app/esp8266at_tester" ABSOLUTE)
 
 include_directories(${_tmp_source_dir})
-include_directories(${_tmp_source_dir}/arch/arm/cortexm/nucleof207zg)
+include_directories(${_tmp_source_dir}/arch/arm/cortexm/nucleof207zg/Inc)
 
 
