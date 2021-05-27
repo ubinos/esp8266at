@@ -16,6 +16,8 @@
 	#error "ubik is necessary"
 #endif
 
+#include <ubinos/bsp/arch.h>
+
 #include <assert.h>
 
 #include "../../../../esp8266at_io.h"
