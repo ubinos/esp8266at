@@ -248,6 +248,7 @@ esp8266at_err_t esp8266at_cmd_at_interactive(esp8266at_t *esp8266at)
     char data[2];
     int len;
     int old_echo;
+    uint8_t ignore_lf = 0;
 
     err = ESP8266AT_ERR_ERROR;
 
@@ -281,8 +282,21 @@ esp8266at_err_t esp8266at_cmd_at_interactive(esp8266at_t *esp8266at)
                 err = ESP8266AT_ERR_OK;
                 break;
             }
-            if (data[0] == '\r')
+            if (ignore_lf)
             {
+                ignore_lf = 0;
+                if (data[0] == '\n')
+                {
+                    continue;
+                }
+            }
+            if (data[0] == '\r' || data[0] == '\n')
+            {
+                if (data[0] == '\r')
+                {
+                    ignore_lf = 1;
+                }
+                data[0] = '\r';
                 data[1] = '\n';
                 len = 2;
             }
