@@ -5,6 +5,12 @@
     "C_Cpp.loggingLevel": "Debug",
     "C_Cpp.default.configurationProvider": "",
     "C_Cpp.default.compileCommands": "${workspaceFolder}/output/Default/compile_commands.json",
+    "disasexpl.useBinaryParsing": true,
+    "disasexpl.associations": {
+        "**/*.S": "${workspaceFolder}/output/Default/app.s",
+        "**/*.c": "${workspaceFolder}/output/Default/app.s",
+        "**/*.cpp": "${workspaceFolder}/output/Default/app.s",
+    },
     "cmake.environment": {
         "CMAKE_SYSTEM_NAME": "Generic",
         "CMAKE_C_COMPILER_FORCED": "TRUE",
@@ -27,7 +33,6 @@
     "cmake.sourceDirectory": "${workspaceFolder}/source",
     "cmake.buildDirectory": "${workspaceFolder}/output/${env:PROJECT_CONFIG_NAME}",
     "files.associations": {
-        "ubinos.h": "c",
-        "stdio.h": "c"
+        "ubinos.h": "c"
     }
 }

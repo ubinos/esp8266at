@@ -8,6 +8,7 @@
             "name": "ARM Target",
             "type": "cppdbg",
             "request": "launch",
+            "preLaunchTask": "make reset",
             "program": "${workspaceFolder}/output/Default/app.elf",
             "args": [],
             "stopAtEntry": true,
