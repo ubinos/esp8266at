@@ -4,10 +4,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# {ubinos_config_type: [buildable, cmake, lib]}
+
+set_cache(UBINOS__UBIK__TICK_TYPE "RTC" STRING)
+
 include(${PROJECT_UBINOS_DIR}/config/ubinos_nucleof207zg.cmake)
-
 include(${PROJECT_LIBRARY_DIR}/stm32cubef2_wrapper/config/stm32cubef2.cmake)
-
+include(${PROJECT_LIBRARY_DIR}/stm32cubef2_extension/config/stm32cubef2_extension.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/esp8266at.cmake)
 
 ####

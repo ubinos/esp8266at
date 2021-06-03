@@ -4,7 +4,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# {ubinos_config_type: [buildable, cmake, app
+
 set_cache(UBINOS__UBICLIB__EXCLUDE_CLI FALSE BOOL)
+
+set_cache(UBINOS__UBIK__TICK_TYPE "RTC" STRING)
 
 set_cache(UBINOS__BSP__DTTY_TYPE "EXTERNAL" STRING)
 set_cache(SEGGERRTT__DTTY_ENABLE TRUE BOOL)

@@ -1,6 +1,7 @@
 /output/
 /include/*_config.h
 /make/custom.mk
+/make/Makefile.bak
 /.settings/
 /.externalToolBuilders/
 /.project
