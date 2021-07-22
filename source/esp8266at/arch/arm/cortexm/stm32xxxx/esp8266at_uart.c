@@ -187,6 +187,7 @@ void esp8266_uart_err_callback(void)
 static void esp8266at_uart_reset(void)
 {
     HAL_StatusTypeDef stm_err;
+    (void) stm_err;
 
     ESP8266_UART_HANDLE.Instance = ESP8266_UART;
     ESP8266_UART_HANDLE.Init.BaudRate = 115200;

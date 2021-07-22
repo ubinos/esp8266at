@@ -29,6 +29,8 @@ esp8266at_err_t esp8266at_init(esp8266at_t *esp8266at)
     int r;
     esp8266at_err_t esp_err;
     ubi_err_t ubi_err;
+    (void) r;
+    (void) ubi_err;
 
     assert(esp8266at != NULL);
     assert(esp8266at->cmd_mutex == NULL);
@@ -826,6 +828,7 @@ esp8266at_err_t esp8266at_cmd_at_ciprecv(esp8266at_t *esp8266at, uint8_t *buffer
     ubi_err_t ubi_err;
     uint32_t read_tmp;
     uint32_t read_tmp2;
+    (void) ubi_err;
 
     r = mutex_lock_timedms(esp8266at->io_data_read_mutex, timeoutms);
     timeoutms = task_getremainingtimeoutms();
