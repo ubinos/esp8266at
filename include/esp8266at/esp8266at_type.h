@@ -28,6 +28,9 @@ extern "C"
 #define ESP8266AT_IP_ADDR_LENGTH_MAX 31
 #define ESP8266AT_MAC_ADDR_LENGTH_MAX 31
 
+#define ESP8266AT_SSID_LENGTH_MAX 64
+#define ESP8266AT_PASSWD_LENGTH_MAX 64
+
 #define ESP8266AT_TEMP_CMD_BUF_SIZE 256
 #define ESP8266AT_TEMP_RESP_BUF_SIZE 256
 
@@ -97,6 +100,9 @@ typedef struct _esp8266at_t
     cbuf_pt io_data_buf;
 
     uint8_t cancel_interactive_mode;
+
+    char ssid[ESP8266AT_SSID_LENGTH_MAX];
+    char passwd[ESP8266AT_PASSWD_LENGTH_MAX];
 } esp8266at_t;
 
 #ifdef __cplusplus

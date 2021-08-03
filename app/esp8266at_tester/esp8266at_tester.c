@@ -148,6 +148,7 @@ static void clihelphookfunc()
     printf("at test                             : Tests AT startup\n");
     printf("at restart                          : Restarts a module\n");
     printf("at version                          : Query version information\n");
+    printf("\n");
     printf("at c echo <on|off>                  : Config echo\n");
     printf("at c wmode <mode>                   : Config WiFi mode\n");
     printf("    <mode> :\n");
@@ -159,13 +160,15 @@ static void clihelphookfunc()
     printf("    <mode> : connection mode (Default: 0)\n");
     printf("        0 : single connection\n");
     printf("        1 : multiple connections\n");
-    printf("at ap join <ssid> <passwd>          : Join to an AP\n");
+    printf("at c ap <ssid> <passwd>             : Set AP join information\n");
+    printf("\n");
+    printf("at ap join                          : Join to an AP\n");
     printf("at ap quit                          : Quit from the AP\n");
-    printf("at ip                               : Query local IP\n");
+    printf("at ap ip                            : Query local IP\n");
+    printf("\n");
     printf("at conn open <type> <ip> <port>     : Open connection\n");
     printf("    <type> : type of transmission (Default: TCP)\n");
-    printf("        TCP   : TCP\n");
-    printf("        TCPv6 : TCPv6\n");
+    printf("        TCP   : TCP client\n");
     printf("at conn close                       : Close connection\n");
     printf("at conn send <data>                 : Send data\n");
     printf("at conn recv <len>                  : Receive data\n");

@@ -642,6 +642,7 @@ esp8266at_err_t esp8266at_cmd_at_cifsr(esp8266at_t *esp8266at, uint32_t timeoutm
             ptr1 = strstr((char*) esp8266at->temp_resp_buf, key);
             if (ptr1 == NULL)
             {
+                err = ESP8266AT_ERR_ERROR;
                 break;
             }
             ptr1 = (char*) (((unsigned int) ptr1) + strlen(key));
@@ -649,6 +650,7 @@ esp8266at_err_t esp8266at_cmd_at_cifsr(esp8266at_t *esp8266at, uint32_t timeoutm
             ptr2 = strstr(ptr1, "\"");
             if (ptr2 == NULL || ptr1 >= ptr2)
             {
+                err = ESP8266AT_ERR_ERROR;
                 break;
             }
 
@@ -664,6 +666,7 @@ esp8266at_err_t esp8266at_cmd_at_cifsr(esp8266at_t *esp8266at, uint32_t timeoutm
             ptr1 = strstr((char*) esp8266at->temp_resp_buf, key2);
             if (ptr1 == NULL)
             {
+                err = ESP8266AT_ERR_ERROR;
                 break;
             }
             ptr1 = (char*) (((unsigned int) ptr1) + strlen(key2));
@@ -671,6 +674,7 @@ esp8266at_err_t esp8266at_cmd_at_cifsr(esp8266at_t *esp8266at, uint32_t timeoutm
             ptr2 = strstr(ptr1, "\"");
             if (ptr2 == NULL || ptr1 >= ptr2)
             {
+                err = ESP8266AT_ERR_ERROR;
                 break;
             }
 
