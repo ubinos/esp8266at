@@ -2,7 +2,6 @@
 
 #if (INCLUDE__APP__esp8266at_tester == 1)
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOL476RG)
-#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
 
 #include <ubinos/bsp/arch.h>
 
@@ -22,6 +21,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
 
+#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
     if (huart->Instance == DTTY_STM32_UART)
     {
         /*##-1- Enable peripherals and GPIO Clocks #################################*/
@@ -51,36 +51,10 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
         HAL_NVIC_SetPriority(DTTY_STM32_UART_IRQn, NVIC_PRIO_MIDDLE, 0);
         HAL_NVIC_EnableIRQ(DTTY_STM32_UART_IRQn);
     }
-    else if (huart->Instance == ESP8266_UART)
+#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
+
+    if (huart->Instance == ESP8266_UART)
     {
-        /* Configure ESP8266 NRST, NCS */
-
-        /* Enable the GPIO clock */
-        ESP8266_NRST_GPIO_CLK_ENABLE();
-        ESP8266_CS_GPIO_CLK_ENABLE();
-
-        /* Set the NRST GPIO pin configuration parametres */
-        GPIO_InitStruct.Pin = ESP8266_NRST_Pin;
-        GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-        GPIO_InitStruct.Pull = GPIO_PULLUP;
-        GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
-
-        /* Configure the NRST IO */
-        HAL_GPIO_Init(ESP8266_NRST_GPIO_Port, &GPIO_InitStruct);
-
-        /* Assert NRST pin */
-        HAL_GPIO_WritePin(ESP8266_NRST_GPIO_Port, ESP8266_NRST_Pin, GPIO_PIN_RESET);
-
-        /* Set the CS GPIO pin configuration parametres */
-        GPIO_InitStruct.Pin = ESP8266_CS_Pin;
-
-        /* Configure the CS IO */
-        HAL_GPIO_Init(ESP8266_CS_GPIO_Port, &GPIO_InitStruct);
-
-        /* Assert CS */
-        HAL_GPIO_WritePin(ESP8266_CS_GPIO_Port, ESP8266_CS_Pin, GPIO_PIN_SET);
-
-
         /* Configure ESP8266 UART */
 
         /*##-1- Enable peripherals and GPIO Clocks #################################*/
@@ -110,7 +84,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
         /* NVIC for USART */
         HAL_NVIC_SetPriority(ESP8266_UART_IRQn, NVIC_PRIO_MIDDLE, 0);
         HAL_NVIC_EnableIRQ(ESP8266_UART_IRQn);
-    }}
+    }
+}
 
 /**
  * @brief UART MSP De-Initialization
@@ -122,6 +97,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
  */
 void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
 {
+#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
     if (huart->Instance == DTTY_STM32_UART)
     {
         /*##-1- Reset peripherals ##################################################*/
@@ -137,7 +113,9 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
         /*##-3- Disable the NVIC for USART TC ###########################################*/
         HAL_NVIC_DisableIRQ(DTTY_STM32_UART_IRQn);
     }
-    else if (huart->Instance == ESP8266_UART)
+#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
+
+    if (huart->Instance == ESP8266_UART)
     {
         /*##-1- Reset peripherals ##################################################*/
         ESP8266_UART_FORCE_RESET();
@@ -154,7 +132,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
     }
 }
 
-#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOL476RG) */
 #endif /* (INCLUDE__APP__esp8266at_tester == 1) */
 

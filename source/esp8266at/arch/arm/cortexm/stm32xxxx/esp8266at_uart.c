@@ -188,6 +188,34 @@ static void esp8266at_uart_reset(void)
 {
     HAL_StatusTypeDef stm_err;
     (void) stm_err;
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+    /* Enable the GPIO clock */
+    ESP8266_NRST_GPIO_CLK_ENABLE();
+    ESP8266_CS_GPIO_CLK_ENABLE();
+
+    /* Set the NRST, CS GPIO pin configuration parametres */
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+
+    /* Configure the NRST IO */
+    GPIO_InitStruct.Pin = ESP8266_NRST_Pin;
+    HAL_GPIO_Init(ESP8266_NRST_GPIO_Port, &GPIO_InitStruct);
+
+    /* Configure the CS IO */
+    GPIO_InitStruct.Pin = ESP8266_CS_Pin;
+    HAL_GPIO_Init(ESP8266_CS_GPIO_Port, &GPIO_InitStruct);
+
+    /* Assert chip select */
+    HAL_GPIO_WritePin(ESP8266_CS_GPIO_Port, ESP8266_CS_Pin, GPIO_PIN_SET);
+
+    /* Assert reset pin */
+    HAL_GPIO_WritePin(ESP8266_NRST_GPIO_Port, ESP8266_NRST_Pin, GPIO_PIN_RESET);
+    HAL_Delay(500);
+    /* Deassert reset pin */
+    HAL_GPIO_WritePin(ESP8266_NRST_GPIO_Port, ESP8266_NRST_Pin, GPIO_PIN_SET);
+    HAL_Delay(500);
 
     ESP8266_UART_HANDLE.Instance = ESP8266_UART;
     ESP8266_UART_HANDLE.Init.BaudRate = 115200;
@@ -205,15 +233,6 @@ static void esp8266at_uart_reset(void)
     assert(stm_err == HAL_OK);
 
     HAL_NVIC_SetPriority(ESP8266_UART_IRQn, NVIC_PRIO_MIDDLE, 0);
-
-    /* Assert reset pin */
-    HAL_GPIO_WritePin(ESP8266_NRST_GPIO_Port, ESP8266_NRST_Pin, GPIO_PIN_RESET);
-    /* Assert chip select pin */
-    HAL_GPIO_WritePin(ESP8266_CS_GPIO_Port, ESP8266_CS_Pin, GPIO_PIN_SET);
-    HAL_Delay(100);
-    /* Deassert reset pin */
-    HAL_GPIO_WritePin(ESP8266_NRST_GPIO_Port, ESP8266_NRST_Pin, GPIO_PIN_SET);
-    HAL_Delay(500);
 }
 
 esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at)
