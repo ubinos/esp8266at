@@ -12,7 +12,7 @@
             "program": "${workspaceFolder}/output/Default/app.elf",
             "args": [],
             "stopAtEntry": true,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}/output/Default",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
