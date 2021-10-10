@@ -1,6 +1,5 @@
 #include <ubinos.h>
 
-#if (INCLUDE__APP__esp8266at_tester == 1)
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOL476RG)
 
 #include <ubinos/bsp/arch.h>
@@ -22,6 +21,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
     GPIO_InitTypeDef GPIO_InitStruct;
 
 #if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
+#if (STM32CUBEL4__DTTY_STM32_UART_ENABLE == 1)
     if (huart->Instance == DTTY_STM32_UART)
     {
         /*##-1- Enable peripherals and GPIO Clocks #################################*/
@@ -51,6 +51,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
         HAL_NVIC_SetPriority(DTTY_STM32_UART_IRQn, NVIC_PRIO_MIDDLE, 0);
         HAL_NVIC_EnableIRQ(DTTY_STM32_UART_IRQn);
     }
+#endif /* (STM32CUBEL4__DTTY_STM32_UART_ENABLE == 1) */
 #endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
 
     if (huart->Instance == ESP8266_UART)
@@ -98,6 +99,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
 {
 #if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
+#if (STM32CUBEL4__DTTY_STM32_UART_ENABLE == 1)
     if (huart->Instance == DTTY_STM32_UART)
     {
         /*##-1- Reset peripherals ##################################################*/
@@ -113,6 +115,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
         /*##-3- Disable the NVIC for USART TC ###########################################*/
         HAL_NVIC_DisableIRQ(DTTY_STM32_UART_IRQn);
     }
+#endif /* (STM32CUBEL4__DTTY_STM32_UART_ENABLE == 1) */
 #endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
 
     if (huart->Instance == ESP8266_UART)
@@ -133,5 +136,4 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
 }
 
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOL476RG) */
-#endif /* (INCLUDE__APP__esp8266at_tester == 1) */
 

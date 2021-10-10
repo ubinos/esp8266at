@@ -1,8 +1,8 @@
 #include <ubinos.h>
 #include <ubinos/bsp/arch.h>
 
-#if (INCLUDE__APP__esp8266at_tester == 1)
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG)
+#if (STM32FOOTPAD == 1)
 
 #include "main.h"
 
@@ -109,6 +109,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
     }
 }
 
+#endif /* (STM32FOOTPAD == 1) */
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG) */
-#endif /* (INCLUDE__APP__esp8266at_tester == 1) */
 

@@ -60,7 +60,7 @@ void dtty_stm32_uart_rx_callback(void);
 void dtty_stm32_uart_tx_callback(void);
 void dtty_stm32_uart_err_callback(void);
 
-/* Definition for ESP8266_UART */
+/* Definition for ESP8266_UART (mikroBUS 2) */
 
 #define ESP8266_UART                            USART6
 #define ESP8266_UART_HANDLE                     huart6

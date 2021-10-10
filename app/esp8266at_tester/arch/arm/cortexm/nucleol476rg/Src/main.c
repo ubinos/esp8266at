@@ -6,13 +6,15 @@
 
 #include <ubinos.h>
 
-#if (INCLUDE__APP__esp8266at_tester == 1)
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOL476RG)
-#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
 
 #include "main.h"
 
+#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
+#if (STM32CUBEL4__DTTY_STM32_UART_ENABLE == 1)
 UART_HandleTypeDef DTTY_STM32_UART_HANDLE;
+#endif /* (STM32CUBEL4__DTTY_STM32_UART_ENABLE == 1) */
+#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
 
 UART_HandleTypeDef ESP8266_UART_HANDLE;
 esp8266at_t _g_esp8266at;
@@ -26,13 +28,20 @@ esp8266at_t _g_esp8266at;
  */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
+#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
+#if (STM32CUBEL4__DTTY_STM32_UART_ENABLE == 1)
     if (huart->Instance == DTTY_STM32_UART)
     {
         dtty_stm32_uart_tx_callback();
+        return;
     }
-    else if (huart->Instance == ESP8266_UART)
+#endif /* (STM32CUBEL4__DTTY_STM32_UART_ENABLE == 1) */
+#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
+
+    if (huart->Instance == ESP8266_UART)
     {
         esp8266_uart_tx_callback();
+        return;
     }
 }
 
@@ -45,13 +54,20 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
+#if (STM32CUBEL4__DTTY_STM32_UART_ENABLE == 1)
     if (huart->Instance == DTTY_STM32_UART)
     {
         dtty_stm32_uart_rx_callback();
+        return;
     }
-    else if (huart->Instance == ESP8266_UART)
+#endif /* (STM32CUBEL4__DTTY_STM32_UART_ENABLE == 1) */
+#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
+
+    if (huart->Instance == ESP8266_UART)
     {
         esp8266_uart_rx_callback();
+        return;
     }
 }
 
@@ -64,17 +80,22 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
  */
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
+#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
+#if (STM32CUBEL4__DTTY_STM32_UART_ENABLE == 1)
     if (huart->Instance == DTTY_STM32_UART)
     {
         dtty_stm32_uart_err_callback();
+        return;
     }
-    else if (huart->Instance == ESP8266_UART)
+#endif /* (STM32CUBEL4__DTTY_STM32_UART_ENABLE == 1) */
+#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
+
+    if (huart->Instance == ESP8266_UART)
     {
         esp8266_uart_err_callback();
+        return;
     }
 }
 
-#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOL476RG) */
-#endif /* (INCLUDE__APP__esp8266at_tester == 1) */
 

@@ -100,8 +100,7 @@ extern esp8266at_t _g_esp8266at;
 #define RF_R_EN_CLK_ENABLE()						__HAL_RCC_GPIOD_CLK_ENABLE()
 #define RF_R_EN_CKL_DISALE()						__HAL_RCC_GPIOD_CLK_DISABLE()
 
-#define NEED_POWER_INIT 1
-#define NEED_WIFI_INIT 1
+#define STM32FOOTPAD 1
 
 void power_init();
 void wifi_enable();

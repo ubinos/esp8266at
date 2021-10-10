@@ -7,12 +7,10 @@
 #include <ubinos.h>
 #include <ubinos/bsp/arch.h>
 
-#if (INCLUDE__APP__esp8266at_tester == 1)
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG)
+#if (STM32FOOTPAD == 1)
 
 #include "main.h"
-
-UART_HandleTypeDef DTTY_STM32_UART_HANDLE;
 
 UART_HandleTypeDef ESP8266_UART_HANDLE;
 esp8266at_t _g_esp8266at;
@@ -29,6 +27,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
     if (huart->Instance == ESP8266_UART)
     {
         esp8266_uart_tx_callback();
+        return;
     }
 }
 
@@ -44,6 +43,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     if (huart->Instance == ESP8266_UART)
     {
         esp8266_uart_rx_callback();
+        return;
     }
 }
 
@@ -59,6 +59,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
     if (huart->Instance == ESP8266_UART)
     {
         esp8266_uart_err_callback();
+        return;
     }
 }
 
@@ -114,6 +115,6 @@ void rf_r_enable() {
 	HAL_GPIO_WritePin(RF_R_EN_PORT, RF_R_EN_PIN, GPIO_PIN_SET);
 }
 
+#endif /* (STM32FOOTPAD == 1) */
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG) */
-#endif /* (INCLUDE__APP__esp8266at_tester == 1) */
 

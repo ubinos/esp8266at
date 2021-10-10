@@ -6,8 +6,6 @@
 
 #include <ubinos.h>
 
-#if (INCLUDE__APP__esp8266at_tester == 1)
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,16 +41,10 @@ static void rootfunc(void *arg)
 {
     int r;
 
-#if (UBINOS__BSP__STM32_STM32XXXX == 1)
-    HAL_Init();
-
-#if (NEED_POWER_INIT == 1)
+#if (STM32FOOTPAD == 1)
     power_init();
-#endif
-#if (NEED_WIFI_INIT == 1)
     wifi_enable();
 #endif
-#endif /* (UBINOS__BSP__STM32_STM32XXXX == 1) */
 
     esp8266at_init(&_g_esp8266at);
 
@@ -183,6 +175,4 @@ static void esp8266at_cli_echo_client2(esp8266at_t *esp8266at)
     char *cmd = "ssid passwd 192.168.0.2 9000 1000";
     esp8266at_cli_echo_client(esp8266at, cmd, strlen(cmd), NULL);
 }
-
-#endif /* (INCLUDE__APP__esp8266at_tester == 1) */
 

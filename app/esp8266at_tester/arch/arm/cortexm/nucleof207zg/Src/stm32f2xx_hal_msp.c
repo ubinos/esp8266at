@@ -1,8 +1,8 @@
 #include <ubinos.h>
 #include <ubinos/bsp/arch.h>
 
-#if (INCLUDE__APP__esp8266at_tester == 1)
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG)
+#if !(STM32FOOTPAD == 1)
 
 #include "main.h"
 
@@ -20,6 +20,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
 
+#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
+#if (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1)
     if (huart->Instance == DTTY_STM32_UART)
     {
         /*##-1- Enable peripherals and GPIO Clocks #################################*/
@@ -50,7 +52,10 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
         HAL_NVIC_SetPriority(DTTY_STM32_UART_IRQn, NVIC_PRIO_MIDDLE, 0);
         HAL_NVIC_EnableIRQ(DTTY_STM32_UART_IRQn);
     }
-    else if (huart->Instance == ESP8266_UART)
+#endif /* (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1) */
+#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
+
+    if (huart->Instance == ESP8266_UART)
     {
         /* Configure ESP8266 UART */
 
@@ -94,6 +99,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
  */
 void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
 {
+#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
+#if (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1)
     if (huart->Instance == DTTY_STM32_UART)
     {
         /*##-1- Reset peripherals ##################################################*/
@@ -109,7 +116,10 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
         /*##-3- Disable the NVIC for USART TC ###########################################*/
         HAL_NVIC_DisableIRQ(DTTY_STM32_UART_IRQn);
     }
-    else if (huart->Instance == ESP8266_UART)
+#endif /* (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1) */
+#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
+
+    if (huart->Instance == ESP8266_UART)
     {
         /*##-1- Reset peripherals ##################################################*/
         ESP8266_UART_FORCE_RESET();
@@ -126,6 +136,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
     }
 }
 
+#endif /* !(STM32FOOTPAD == 1) */
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG) */
-#endif /* (INCLUDE__APP__esp8266at_tester == 1) */
 
