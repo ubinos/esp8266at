@@ -24,6 +24,8 @@
 
 #include "main.h"
 
+#include "nrf_delay.h"
+
 static const char * _data_key = ESP8266AT_IO_DATA_KEY;
 
 static nrf_drv_uart_t _g_esp8266at_uart = NRF_DRV_UART_INSTANCE(1);
@@ -199,10 +201,42 @@ static void esp8266at_io_event_handler(nrf_drv_uart_event_t *p_event, void *p_co
 static void esp8266at_uart_reset(void)
 {
     ret_code_t nrf_err;
+    (void) nrf_err;
     nrf_drv_uart_config_t config;
 
-    config.pseltxd = ARDUINO_1_PIN;
-    config.pselrxd = ARDUINO_0_PIN;
+    nrf_err = nrf_drv_gpiote_init();
+    APP_ERROR_CHECK(nrf_err);
+
+#if (ESP8266AT__USE_RESET_PIN == 1)
+    /* Configure the NRST IO */
+    nrf_drv_gpiote_out_config_t reset_n_config = GPIOTE_CONFIG_OUT_SIMPLE(true);
+    nrf_err = nrf_drv_gpiote_out_init(ESP8266_NRST_Pin, &reset_n_config);
+    APP_ERROR_CHECK(nrf_err);
+#endif /* (ESP8266AT__USE_RESET_PIN == 1) */
+
+#if (ESP8266AT__USE_CHIPSELECT_PIN == 1)
+    /* Configure the CS IO */
+    nrf_drv_gpiote_out_config_t cs_config = GPIOTE_CONFIG_OUT_SIMPLE(true);
+    nrf_err = nrf_drv_gpiote_out_init(ESP8266_CS_Pin, &cs_config);
+    APP_ERROR_CHECK(nrf_err);
+
+    /* Assert chip select */
+    nrf_drv_gpiote_out_set(ESP8266_CS_Pin);
+#endif /* (ESP8266AT__USE_CHIPSELECT_PIN == 1) */
+
+#if (ESP8266AT__USE_RESET_PIN == 1)
+    /* Assert reset pin */
+    nrf_drv_gpiote_out_clear(ESP8266_NRST_Pin);
+    nrf_delay_ms(500);
+    /* Deassert reset pin */
+    nrf_drv_gpiote_out_set(ESP8266_NRST_Pin);
+    nrf_delay_ms(500);
+#else
+    nrf_delay_ms(1000);
+#endif /* (ESP8266AT__USE_RESET_PIN == 1) */
+
+    config.pseltxd = ESP8266_UART_TX_Pin;
+    config.pselrxd = ESP8266_UART_RX_Pin;
     config.pselcts = CTS_PIN_NUMBER;
     config.pselrts = RTS_PIN_NUMBER;
     config.p_context = NULL;
