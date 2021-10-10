@@ -22,34 +22,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
     if (huart->Instance == ESP8266_UART)
     {
-        /* Configure ESP8266 NRST, NCS */
-
-        /* Enable the GPIO clock */
-        ESP8266_NRST_GPIO_CLK_ENABLE();
-        ESP8266_CS_GPIO_CLK_ENABLE();
-
-        /* Set the NRST GPIO pin configuration parametres */
-        GPIO_InitStruct.Pin = ESP8266_NRST_Pin;
-        GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-        GPIO_InitStruct.Pull = GPIO_PULLUP;
-        GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
-
-        /* Configure the NRST IO */
-        HAL_GPIO_Init(ESP8266_NRST_GPIO_Port, &GPIO_InitStruct);
-
-        /* Assert NRST pin */
-        HAL_GPIO_WritePin(ESP8266_NRST_GPIO_Port, ESP8266_NRST_Pin, GPIO_PIN_RESET);
-
-        /* Set the CS GPIO pin configuration parametres */
-        GPIO_InitStruct.Pin = ESP8266_CS_Pin;
-
-        /* Configure the CS IO */
-        HAL_GPIO_Init(ESP8266_CS_GPIO_Port, &GPIO_InitStruct);
-
-        /* Assert CS */
-        HAL_GPIO_WritePin(ESP8266_CS_GPIO_Port, ESP8266_CS_Pin, GPIO_PIN_SET);
-
-
         /* Configure ESP8266 UART */
 
         /*##-1- Enable peripherals and GPIO Clocks #################################*/

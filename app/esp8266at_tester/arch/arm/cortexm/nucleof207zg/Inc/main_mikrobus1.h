@@ -88,19 +88,19 @@ void esp8266_uart_rx_callback(void);
 void esp8266_uart_tx_callback(void);
 void esp8266_uart_err_callback(void);
 
+#if (ESP8266AT__USE_RESET_PIN == 1)
 /* Definition for ESP8266_NRST */
+    #define ESP8266_NRST_GPIO_CLK_ENABLE()          __HAL_RCC_GPIOF_CLK_ENABLE()
+    #define ESP8266_NRST_Pin                        GPIO_PIN_3
+    #define ESP8266_NRST_GPIO_Port                  GPIOF
+#endif /* (ESP8266AT__USE_RESET_PIN == 1) */
 
-#define ESP8266_NRST_GPIO_CLK_ENABLE()          __HAL_RCC_GPIOF_CLK_ENABLE()
-
-#define ESP8266_NRST_Pin                        GPIO_PIN_3
-#define ESP8266_NRST_GPIO_Port                  GPIOF
-
+#if (ESP8266AT__USE_CHIPSELECT_PIN == 1)
 /* Definition for ESP8266_CS */
-
-#define ESP8266_CS_GPIO_CLK_ENABLE()            __HAL_RCC_GPIOD_CLK_ENABLE()
-
-#define ESP8266_CS_Pin                          GPIO_PIN_14
-#define ESP8266_CS_GPIO_Port                    GPIOD
+    #define ESP8266_CS_GPIO_CLK_ENABLE()            __HAL_RCC_GPIOD_CLK_ENABLE()
+    #define ESP8266_CS_Pin                          GPIO_PIN_14
+    #define ESP8266_CS_GPIO_Port                    GPIOD
+#endif /* (ESP8266AT__USE_CHIPSELECT_PIN == 1) */
 
 /* Definition for esp8266at */
 

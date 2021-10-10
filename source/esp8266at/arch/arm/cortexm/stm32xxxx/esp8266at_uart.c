@@ -191,31 +191,43 @@ static void esp8266at_uart_reset(void)
     GPIO_InitTypeDef GPIO_InitStruct;
 
     /* Enable the GPIO clock */
+#if (ESP8266AT__USE_RESET_PIN == 1)
     ESP8266_NRST_GPIO_CLK_ENABLE();
+#endif /* (ESP8266AT__USE_RESET_PIN == 1) */
+#if (ESP8266AT__USE_CHIPSELECT_PIN == 1)
     ESP8266_CS_GPIO_CLK_ENABLE();
+#endif /* (ESP8266AT__USE_CHIPSELECT_PIN == 1) */
 
     /* Set the NRST, CS GPIO pin configuration parametres */
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
 
+#if (ESP8266AT__USE_RESET_PIN == 1)
     /* Configure the NRST IO */
     GPIO_InitStruct.Pin = ESP8266_NRST_Pin;
     HAL_GPIO_Init(ESP8266_NRST_GPIO_Port, &GPIO_InitStruct);
+#endif /* (ESP8266AT__USE_RESET_PIN == 1) */
 
+#if (ESP8266AT__USE_CHIPSELECT_PIN == 1)
     /* Configure the CS IO */
     GPIO_InitStruct.Pin = ESP8266_CS_Pin;
     HAL_GPIO_Init(ESP8266_CS_GPIO_Port, &GPIO_InitStruct);
 
     /* Assert chip select */
     HAL_GPIO_WritePin(ESP8266_CS_GPIO_Port, ESP8266_CS_Pin, GPIO_PIN_SET);
+#endif /* (ESP8266AT__USE_CHIPSELECT_PIN == 1) */
 
+#if (ESP8266AT__USE_RESET_PIN == 1)
     /* Assert reset pin */
     HAL_GPIO_WritePin(ESP8266_NRST_GPIO_Port, ESP8266_NRST_Pin, GPIO_PIN_RESET);
     HAL_Delay(500);
     /* Deassert reset pin */
     HAL_GPIO_WritePin(ESP8266_NRST_GPIO_Port, ESP8266_NRST_Pin, GPIO_PIN_SET);
     HAL_Delay(500);
+#else
+    HAL_Delay(1000);
+#endif /* (ESP8266AT__USE_RESET_PIN == 1) */
 
     ESP8266_UART_HANDLE.Instance = ESP8266_UART;
     ESP8266_UART_HANDLE.Init.BaudRate = 115200;
