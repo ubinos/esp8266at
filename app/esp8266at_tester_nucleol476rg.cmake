@@ -4,10 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-# {ubinos_config_type: [buildable, cmake, app
-
-set(INCLUDE__APP TRUE)
-set(APP__NAME "esp8266at_tester")
+# ubinos_config_info {"name_base": "esp8266at_tester", "build_type": "cmake_ubinos", "app": true}
 
 set_cache(UBINOS__UBICLIB__EXCLUDE_CLI FALSE BOOL)
 
@@ -22,6 +19,11 @@ include(${PROJECT_UBINOS_DIR}/config/ubinos_nucleol476rg.cmake)
 include(${PROJECT_LIBRARY_DIR}/stm32cubel4_wrapper/config/stm32cubel4.cmake)
 include(${PROJECT_LIBRARY_DIR}/stm32cubel4_extension/config/stm32cubel4_extension.cmake)
 include(${PROJECT_LIBRARY_DIR}/esp8266at/config/esp8266at.cmake)
+
+####
+
+set(INCLUDE__APP TRUE)
+set(APP__NAME "esp8266at_tester")
 
 get_filename_component(_tmp_source_dir "${CMAKE_CURRENT_LIST_DIR}/${APP__NAME}" ABSOLUTE)
 string(TOLOWER ${UBINOS__BSP__BOARD_MODEL} _temp_board_model)

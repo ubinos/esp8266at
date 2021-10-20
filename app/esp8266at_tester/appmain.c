@@ -25,12 +25,10 @@ static void esp8266at_cli_echo_client2(esp8266at_t *esp8266at);
 int appmain(int argc, char *argv[])
 {
     int r;
+    (void) r;
 
     r = task_create(NULL, rootfunc, NULL, task_getmiddlepriority(), 0, "root");
-    if (0 != r)
-    {
-        logme("fail at task_create");
-    }
+    ubi_assert(r == 0);
 
     ubik_comp_start();
 
@@ -40,6 +38,7 @@ int appmain(int argc, char *argv[])
 static void rootfunc(void *arg)
 {
     int r;
+    (void) r;
 
 #if (STM32FOOTPAD == 1)
     power_init();
