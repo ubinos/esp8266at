@@ -5,6 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "ARM Target (build load)",
+            "type": "cppdbg",
+            "request": "launch",
+            "preLaunchTask": "make build load",
+            "program": "${workspaceFolder}/output/Default/app.elf",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}/output/Default",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "targetArchitecture": "arm",
+            "miDebuggerPath": "arm-none-eabi-gdb",
+            "miDebuggerServerAddress": "localhost:2331",
+        },
+        {
             "name": "ARM Target",
             "type": "cppdbg",
             "request": "launch",
@@ -19,6 +35,14 @@
             "targetArchitecture": "arm",
             "miDebuggerPath": "arm-none-eabi-gdb",
             "miDebuggerServerAddress": "localhost:2331",
+        },
+        {
+            "name":"Python: Current File",
+            "type":"python",
+            "request":"launch",
+            "program":"${file}",
+            "cwd": "${fileDirname}",
+            "console":"integratedTerminal"
         }
     ],
 }
