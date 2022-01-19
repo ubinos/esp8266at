@@ -7,6 +7,7 @@
 #include <ubinos.h>
 
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOL476RG)
+#if (UBINOS__BSP__BOARD_VARIANT == 0)
 
 #include "main.h"
 
@@ -97,5 +98,6 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
     }
 }
 
+#endif /* (UBINOS__BSP__BOARD_VARIANT == 0) */
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOL476RG) */
 

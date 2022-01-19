@@ -1,8 +1,9 @@
 #include <ubinos.h>
-#include <ubinos/bsp/arch.h>
 
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG)
-#if !(STM32FOOTPAD == 1)
+#if (UBINOS__BSP__BOARD_VARIANT == 0)
+
+#include <ubinos/bsp/arch.h>
 
 #include "main.h"
 
@@ -19,6 +20,7 @@
 void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
+    (void) GPIO_InitStruct;
 
 #if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
 #if (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1)
@@ -136,6 +138,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
     }
 }
 
-#endif /* !(STM32FOOTPAD == 1) */
+#endif /* (UBINOS__BSP__BOARD_VARIANT == 0) */
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG) */
 

@@ -5,12 +5,19 @@
  */
 
 #include <ubinos.h>
-#include <ubinos/bsp/arch.h>
 
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG)
-#if (STM32FOOTPAD == 1)
+#if (UBINOS__BSP__BOARD_VARIANT == 1)
 
 #include "main.h"
+
+#if (STM32FOOTPAD_BOARD == 1)
+
+#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
+#if (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1)
+UART_HandleTypeDef DTTY_STM32_UART_HANDLE;
+#endif /* (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1) */
+#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
 
 UART_HandleTypeDef ESP8266_UART_HANDLE;
 esp8266at_t _g_esp8266at;
@@ -24,6 +31,16 @@ esp8266at_t _g_esp8266at;
  */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
+#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
+#if (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1)
+    if (huart->Instance == DTTY_STM32_UART)
+    {
+        dtty_stm32_uart_tx_callback();
+        return;
+    }
+#endif /* (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1) */
+#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
+
     if (huart->Instance == ESP8266_UART)
     {
         esp8266_uart_tx_callback();
@@ -40,6 +57,16 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
+#if (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1)
+    if (huart->Instance == DTTY_STM32_UART)
+    {
+        dtty_stm32_uart_rx_callback();
+        return;
+    }
+#endif /* (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1) */
+#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
+
     if (huart->Instance == ESP8266_UART)
     {
         esp8266_uart_rx_callback();
@@ -56,13 +83,22 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
  */
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
+#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
+#if (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1)
+    if (huart->Instance == DTTY_STM32_UART)
+    {
+        dtty_stm32_uart_err_callback();
+        return;
+    }
+#endif /* (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1) */
+#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
+
     if (huart->Instance == ESP8266_UART)
     {
         esp8266_uart_err_callback();
         return;
     }
 }
-
 
 void power_init() {
     GPIO_InitTypeDef GPIO_InitStruct;
@@ -115,6 +151,8 @@ void rf_r_enable() {
 	HAL_GPIO_WritePin(RF_R_EN_PORT, RF_R_EN_PIN, GPIO_PIN_SET);
 }
 
-#endif /* (STM32FOOTPAD == 1) */
+#endif /* (STM32FOOTPAD_BOARD == 1) */
+
+#endif /* (UBINOS__BSP__BOARD_VARIANT == 1) */
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG) */
 

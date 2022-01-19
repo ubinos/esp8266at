@@ -33,6 +33,13 @@ extern "C"
 /* Exported functions ------------------------------------------------------- */
 
 /* Interrupt Handler */
+#if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
+#if (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1)
+
+void DTTY_STM32_UART_IRQHandler(void);
+
+#endif /* (STM32CUBEF2__DTTY_STM32_UART_ENABLE == 1) */
+#endif /* (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL) */
 
 void ESP8266_UART_IRQHandler(void);
 

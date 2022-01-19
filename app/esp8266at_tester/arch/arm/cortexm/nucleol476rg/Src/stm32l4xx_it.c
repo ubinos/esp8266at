@@ -1,8 +1,10 @@
 #include <ubinos.h>
 
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOL476RG)
+#if (UBINOS__BSP__BOARD_VARIANT == 0)
 
 #include "main.h"
+
 #include "stm32l4xx_it.h"
 
 #if (UBINOS__BSP__DTTY_TYPE == UBINOS__BSP__DTTY_TYPE__EXTERNAL)
@@ -41,5 +43,6 @@ void SysTick_Handler(void)
 }
 #endif /* (UBINOS__UBIK__TICK_TYPE == UBINOS__UBIK__TICK_TYPE__RTC) */
 
+#endif /* (UBINOS__BSP__BOARD_VARIANT == 0) */
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOL476RG) */
 
