@@ -40,12 +40,10 @@ static void rootfunc(void *arg)
     int r;
     (void) r;
 
-#if (UBINOS__BSP__BOARD_VARIANT == 1)
-#if (STM32FOOTPAD_BOARD == 1)
+#if (UBINOS__BSP__BOARD_VARIATION__STM32FOOTPAD == 1)
     power_init();
     wifi_enable();
-#endif /* (STM32FOOTPAD_BOARD == 1) */
-#endif /* (UBINOS__BSP__BOARD_VARIANT == 1) */
+#endif /* (UBINOS__BSP__BOARD_VARIATION__STM32FOOTPAD == 1) */
 
     esp8266at_init(&_g_esp8266at);
 

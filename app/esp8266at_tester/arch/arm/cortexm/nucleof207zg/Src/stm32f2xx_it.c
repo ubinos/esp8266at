@@ -1,7 +1,7 @@
 #include <ubinos.h>
 
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG)
-#if (UBINOS__BSP__BOARD_VARIANT == 0)
+#if (UBINOS__BSP__BOARD_VARIATION__NONE == 1)
 
 #include "main.h"
 
@@ -31,6 +31,6 @@ void ESP8266_UART_IRQHandler(void)
     HAL_UART_IRQHandler(&ESP8266_UART_HANDLE);
 }
 
-#endif /* (UBINOS__BSP__BOARD_VARIANT == 0) */
+#endif /* (UBINOS__BSP__BOARD_VARIATION__NONE == 1) */
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG) */
 

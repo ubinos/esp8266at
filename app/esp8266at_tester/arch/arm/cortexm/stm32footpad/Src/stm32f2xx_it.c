@@ -1,11 +1,9 @@
 #include <ubinos.h>
 
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG)
-#if (UBINOS__BSP__BOARD_VARIANT == 1)
+#if (UBINOS__BSP__BOARD_VARIATION__STM32FOOTPAD == 1)
 
 #include "main.h"
-
-#if (STM32FOOTPAD_BOARD == 1)
 
 #include "stm32f2xx_it.h"
 
@@ -33,8 +31,6 @@ void ESP8266_UART_IRQHandler(void)
     HAL_UART_IRQHandler(&ESP8266_UART_HANDLE);
 }
 
-#endif /* (STM32FOOTPAD_BOARD == 1) */
-
-#endif /* (UBINOS__BSP__BOARD_VARIANT == 1) */
+#endif /* (UBINOS__BSP__BOARD_VARIATION__STM32FOOTPAD == 1) */
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG) */
 

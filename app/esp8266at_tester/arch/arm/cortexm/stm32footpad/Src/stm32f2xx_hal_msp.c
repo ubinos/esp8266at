@@ -1,13 +1,11 @@
 #include <ubinos.h>
 
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG)
-#if (UBINOS__BSP__BOARD_VARIANT == 1)
+#if (UBINOS__BSP__BOARD_VARIATION__STM32FOOTPAD == 1)
 
 #include <ubinos/bsp/arch.h>
 
 #include "main.h"
-
-#if (STM32FOOTPAD_BOARD == 1)
 
 /**
  * @brief UART MSP Initialization
@@ -139,8 +137,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
     }
 }
 
-#endif /* (STM32FOOTPAD_BOARD == 1) */
-
-#endif /* (UBINOS__BSP__BOARD_VARIANT == 1) */
+#endif /* (UBINOS__BSP__BOARD_VARIATION__STM32FOOTPAD == 1) */
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG) */
 
