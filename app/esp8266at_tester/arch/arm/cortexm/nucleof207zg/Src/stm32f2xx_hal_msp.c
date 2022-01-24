@@ -1,7 +1,7 @@
 #include <ubinos.h>
 
 #if (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG)
-#if (UBINOS__BSP__BOARD_VARIATION__NONE == 1)
+#if (UBINOS__BSP__BOARD_VARIATION__NUCLEOF207ZG == 1)
 
 #include <ubinos/bsp/arch.h>
 
@@ -138,6 +138,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
     }
 }
 
-#endif /* (UBINOS__BSP__BOARD_VARIATION__NONE == 1) */
+#endif /* (UBINOS__BSP__BOARD_VARIATION__NUCLEOF207ZG == 1) */
 #endif /* (UBINOS__BSP__BOARD_MODEL == UBINOS__BSP__BOARD_MODEL__NUCLEOF207ZG) */
 
