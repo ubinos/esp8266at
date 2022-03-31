@@ -104,6 +104,18 @@ static int clihookfunc(char *str, int len, void *arg)
             break;
         }
 
+        cmd = "rdate";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            tmpstr = &tmpstr[cmdlen];
+            tmplen -= cmdlen;
+
+            esp8266at_cli_rdate(&_g_esp8266at, tmpstr, tmplen, arg);
+            r = 0;
+            break;
+        }
+
         cmd = "echo client ";
         cmdlen = strlen(cmd);
         if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
@@ -139,6 +151,8 @@ static void clihelphookfunc()
     printf("at test                             : Tests AT startup\n");
     printf("at restart                          : Restarts a module\n");
     printf("at version                          : Query version information\n");
+    printf("at sntp                             : Query SNTP configuration\n");
+    printf("at time                             : Query SNTP time\n");
     printf("\n");
     printf("at c echo <on|off>                  : Config echo\n");
     printf("at c wmode <mode>                   : Config WiFi mode\n");
@@ -152,6 +166,12 @@ static void clihelphookfunc()
     printf("        0 : single connection\n");
     printf("        1 : multiple connections\n");
     printf("at c ap <ssid> <passwd>             : Set AP join information\n");
+    printf("at c sntp <enable> <tz> (<server>)  : Set SNTP configuration\n");
+    printf("    <enalbe> : enable\n");
+    printf("        0 : disable\n");
+    printf("        1 : enable\n");
+    printf("    <tz> : timezone (-11 to 13)\n");
+    printf("    <server> : sntp server address");
     printf("\n");
     printf("at ap join                          : Join to an AP\n");
     printf("at ap quit                          : Quit from the AP\n");
@@ -163,6 +183,8 @@ static void clihelphookfunc()
     printf("at conn close                       : Close connection\n");
     printf("at conn send <data>                 : Send data\n");
     printf("at conn recv <len>                  : Receive data\n");
+    printf("\n");
+    printf("rdate                               : sync system time with NSTP time\n");
     printf("\n");
     printf("echo client <ssid> <passwd> <ip> <port> <count> : echo client test\n");
     printf("\n");

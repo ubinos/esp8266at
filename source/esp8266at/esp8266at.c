@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <esp8266at.h>
+#include <time.h>
 
 #if (INCLUDE__ESP8266AT == 1)
 
@@ -69,6 +70,13 @@ esp8266at_err_t esp8266at_init(esp8266at_t *esp8266at)
 
     esp_err = esp8266at_io_init(esp8266at);
     assert(esp_err == ESP8266AT_ERR_OK);
+
+    memset(esp8266at->ssid, 0, ESP8266AT_SSID_LENGTH_MAX);
+    memset(esp8266at->passwd, 0, ESP8266AT_PASSWD_LENGTH_MAX);
+
+    esp8266at->sntp_enable = 0;
+    esp8266at->sntp_timezone = 0;
+    memset(esp8266at->sntp_server_addr, 0, ESP8266AT_SNTP_SERVER_MAX * ESP8266AT_SNTP_SERVER_ADDR_LENGTH_MAX);
 
     esp_err = ESP8266AT_ERR_OK;
 
@@ -888,6 +896,286 @@ esp8266at_err_t esp8266at_cmd_at_ciprecv(esp8266at_t *esp8266at, uint8_t *buffer
     mutex_unlock(esp8266at->io_data_read_mutex);
 
     return esp_err;
+}
+
+esp8266at_err_t esp8266at_cmd_at_cipsntpcfg(esp8266at_t *esp8266at, uint8_t enable, uint8_t timezone, char * sntp_server_addr, char * sntp_server_addr2, char * sntp_server_addr3, uint32_t timeoutms, uint32_t *remain_timeoutms)
+{
+    int r;
+    esp8266at_err_t err;
+    char *ptr1;
+
+    r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
+    timeoutms = task_getremainingtimeoutms();
+    if (r == UBIK_ERR__TIMEOUT)
+    {
+        return ESP8266AT_ERR_TIMEOUT;
+    }
+
+    sprintf(esp8266at->temp_cmd_buf, "AT+CIPSNTPCFG=%d,%d", enable, timezone);
+    ptr1 = esp8266at->temp_cmd_buf + strlen(esp8266at->temp_cmd_buf);
+    if (sntp_server_addr != NULL && strlen(sntp_server_addr) > 0)
+    {
+        sprintf(ptr1, ",\"%s\"", sntp_server_addr);
+        ptr1 += strlen(ptr1);
+
+        if (sntp_server_addr2 != NULL && strlen(sntp_server_addr2) > 0)
+        {
+            sprintf(ptr1, ",\"%s\"", sntp_server_addr2);
+            ptr1 += strlen(ptr1);
+
+            if (sntp_server_addr3 != NULL && strlen(sntp_server_addr3) > 0)
+            {
+                sprintf(ptr1, ",\"%s\"", sntp_server_addr3);
+                ptr1 += strlen(ptr1);
+            }
+        }
+    }
+    sprintf(ptr1, "\r\n");
+
+    err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->temp_cmd_buf, "OK\r\n", timeoutms, &timeoutms);
+
+    if (remain_timeoutms)
+    {
+        *remain_timeoutms = timeoutms;
+    }
+
+    mutex_unlock(esp8266at->cmd_mutex);
+
+    return err;
+}
+
+esp8266at_err_t esp8266at_cmd_at_cipsntpcfg_q(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms)
+{
+    int r;
+    esp8266at_err_t err;
+    char *ptr1 = NULL;
+    char *ptr2 = NULL;
+    int size = 0;
+    const char *key = "+CIPSNTPCFG:";
+
+    r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
+    timeoutms = task_getremainingtimeoutms();
+    if (r == UBIK_ERR__TIMEOUT)
+    {
+        return ESP8266AT_ERR_TIMEOUT;
+    }
+
+    err = _send_cmd_and_wait_rsp(esp8266at, "AT+CIPSNTPCFG?\r\n", "OK\r\n", timeoutms, &timeoutms);
+
+    if (err == ESP8266AT_ERR_OK)
+    {
+        do
+        {
+            ptr1 = strstr((char*) esp8266at->temp_resp_buf, key);
+            if (ptr1 == NULL)
+            {
+                break;
+            }
+            ptr1 = (char*) (((unsigned int) ptr1) + strlen(key));
+
+            ////
+            ptr2 = strstr(ptr1, ",");
+            if (ptr2 == NULL || ptr1 >= ptr2)
+            {
+                break;
+            }
+            *ptr2 = 0x0;
+            esp8266at->sntp_enable = atoi(ptr1);
+            *ptr2 = ' ';
+
+            ////
+            ptr1 = ptr2;
+            ptr2 = strstr(ptr1, ",");
+            if (ptr2 == NULL || ptr1 >= ptr2)
+            {
+                break;
+            }
+            *ptr2 = 0x0;
+            ptr1++;
+            esp8266at->sntp_timezone = atoi(ptr1);
+            *ptr2 = ' ';
+
+            ////
+            for (int i = 0; i < ESP8266AT_SNTP_SERVER_MAX; i++)
+            {
+                ptr1 = ptr2;
+                ptr2 = strstr(ptr1, "\"");
+                if (ptr2 == NULL || ptr1 >= ptr2)
+                {
+                    break;
+                }
+                *ptr2 = ' ';
+                ptr1 = ptr2;
+                ptr2 = strstr(ptr1, "\"");
+                if (ptr2 == NULL || ptr1 >= ptr2)
+                {
+                    break;
+                }
+                *ptr2 = ' ';
+                ptr1++;
+                size = (unsigned int) ptr2 - (unsigned int) ptr1;
+                size = min(size, ESP8266AT_SNTP_SERVER_ADDR_LENGTH_MAX);
+                strncpy(esp8266at->sntp_server_addr[i], ptr1, size);
+            }
+            break;
+        } while (1);
+    }
+
+    if (remain_timeoutms)
+    {
+        *remain_timeoutms = timeoutms;
+    }
+
+    mutex_unlock(esp8266at->cmd_mutex);
+
+    return err;
+}
+
+esp8266at_err_t esp8266at_cmd_at_cipsntptime(esp8266at_t *esp8266at, struct tm * tm_ptr, uint32_t timeoutms, uint32_t *remain_timeoutms)
+{
+    int r;
+    esp8266at_err_t err;
+    char *ptr1 = NULL;
+    char *ptr2 = NULL;
+    const char * key = "+CIPSNTPTIME:";
+    const char * wday[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    const char * mon[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+    if (tm_ptr == NULL)
+    {
+        return ESP8266AT_ERR_ERROR;
+    }
+
+    r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
+    timeoutms = task_getremainingtimeoutms();
+    if (r == UBIK_ERR__TIMEOUT)
+    {
+        return ESP8266AT_ERR_TIMEOUT;
+    }
+
+    err = _send_cmd_and_wait_rsp(esp8266at, "AT+CIPSNTPTIME?\r\n", "OK\r\n", timeoutms, &timeoutms);
+
+    if (err == ESP8266AT_ERR_OK)
+    {
+        err = ESP8266AT_ERR_ERROR;
+        do
+        {
+            ptr1 = strstr((char*) esp8266at->temp_resp_buf, key);
+            if (ptr1 == NULL)
+            {
+                break;
+            }
+            ptr1 = (char*) (((unsigned int) ptr1) + strlen(key));
+
+            ////
+            ptr2 = strstr(ptr1, " ");
+            if (ptr2 == NULL || ptr1 >= ptr2)
+            {
+                break;
+            }
+            *ptr2 = 0x0;
+            tm_ptr->tm_wday = 0;
+            for (int i = 0; i < 7; i++)
+            {
+                if(strcmp(ptr1, wday[i]) == 0)
+                {
+                    tm_ptr->tm_wday = i;
+                    break;
+                }
+            }
+            *ptr2 = ',';
+
+            ////
+            ptr1 = ptr2;
+            ptr2 = strstr(ptr1, " ");
+            if (ptr2 == NULL || ptr1 >= ptr2)
+            {
+                break;
+            }
+            ptr1++;
+            *ptr2 = 0x0;
+            tm_ptr->tm_mon = 0;
+            for (int i = 0; i < 12; i++)
+            {
+                if(strcmp(ptr1, mon[i]) == 0)
+                {
+                    tm_ptr->tm_mon = i;
+                    break;
+                }
+            }
+            *ptr2 = ',';
+
+            ////
+            ptr1 = ptr2;
+            ptr2 = strstr(ptr1, " ");
+            if (ptr2 == NULL || ptr1 >= ptr2)
+            {
+                break;
+            }
+            *ptr2 = 0x0;
+            ptr1++;
+            tm_ptr->tm_mday = atoi(ptr1);
+            *ptr2 = ',';
+
+            ////
+            ptr1 = ptr2;
+            ptr2 = strstr(ptr1, ":");
+            if (ptr2 == NULL || ptr1 >= ptr2)
+            {
+                break;
+            }
+            *ptr2 = 0x0;
+            ptr1++;
+            tm_ptr->tm_hour = atoi(ptr1);
+            *ptr2 = ',';
+
+            ////
+            ptr1 = ptr2;
+            ptr2 = strstr(ptr1, ":");
+            if (ptr2 == NULL || ptr1 >= ptr2)
+            {
+                break;
+            }
+            *ptr2 = 0x0;
+            ptr1++;
+            tm_ptr->tm_min = atoi(ptr1);
+            *ptr2 = ',';
+
+            ////
+            ptr1 = ptr2;
+            ptr2 = strstr(ptr1, " ");
+            if (ptr2 == NULL || ptr1 >= ptr2)
+            {
+                break;
+            }
+            *ptr2 = 0x0;
+            ptr1++;
+            tm_ptr->tm_sec = atoi(ptr1);
+            *ptr2 = ' ';
+
+            ////
+            ptr1 = ptr2;
+            tm_ptr->tm_year = atoi(ptr1);
+            if (tm_ptr->tm_year < 1900)
+            {
+                break;
+            }
+            tm_ptr->tm_year -= 1900;
+
+            ////
+            err = ESP8266AT_ERR_OK;
+            break;
+        } while (1);
+    }
+
+    if (remain_timeoutms)
+    {
+        *remain_timeoutms = timeoutms;
+    }
+
+    mutex_unlock(esp8266at->cmd_mutex);
+
+    return err;
 }
 
 #endif /* (INCLUDE__ESP8266AT == 1) */

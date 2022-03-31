@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
+#include <sys/time.h>
+
 #include <esp8266at.h>
 #include <esp8266at_cli.h>
 
@@ -70,6 +73,24 @@ int esp8266at_cli_at(esp8266at_t *esp8266at, char *str, int len, void *arg)
         if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
         {
             esp8266at_cli_at_query_version(esp8266at);
+            r = 0;
+            break;
+        }
+
+        cmd = "sntp";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            esp8266at_cli_at_query_sntpcfg(esp8266at);
+            r = 0;
+            break;
+        }
+
+        cmd = "time";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            esp8266at_cli_at_query_sntptime(esp8266at);
             r = 0;
             break;
         }
@@ -146,6 +167,33 @@ void esp8266at_cli_at_query_version(esp8266at_t *esp8266at)
     printf("result : err = %d, version = %s\n", err, esp8266at->version);
 }
 
+void esp8266at_cli_at_query_sntpcfg(esp8266at_t *esp8266at)
+{
+    esp8266at_err_t err;
+
+    err = esp8266at_cmd_at_cipsntpcfg_q(esp8266at, _timeoutms, NULL);
+    printf("result : err = %d, enable = %d, timezone=%d", err, esp8266at->sntp_enable, esp8266at->sntp_timezone);
+    for (int i = 0; i < ESP8266AT_SNTP_SERVER_MAX; i++)
+    {
+        if (strlen(esp8266at->sntp_server_addr[i]) > 0)
+        {
+            printf(", server[%d] = %s", i, esp8266at->sntp_server_addr[i]);
+        }
+    }
+    printf("\n");
+}
+
+void esp8266at_cli_at_query_sntptime(esp8266at_t *esp8266at)
+{
+    esp8266at_err_t err;
+
+    struct tm tm_data;
+
+    err = esp8266at_cmd_at_cipsntptime(esp8266at, &tm_data, _timeoutms, NULL);
+    printf("result : err = %d, year = %d, mon = %d, mday = %d, wday = %d, hour = %d, min = %d, sec = %d\n", err, 
+        tm_data.tm_year + 1900, tm_data.tm_mon + 1, tm_data.tm_mday, tm_data.tm_wday, tm_data.tm_hour, tm_data.tm_min, tm_data.tm_sec);
+}
+
 int esp8266at_cli_at_config(esp8266at_t *esp8266at, char *str, int len, void *arg)
 {
     int r = -1;
@@ -200,6 +248,17 @@ int esp8266at_cli_at_config(esp8266at_t *esp8266at, char *str, int len, void *ar
             tmplen -= cmdlen;
 
             r = esp8266at_cli_at_config_ap(esp8266at, tmpstr, tmplen, arg);
+            break;
+        }
+
+        cmd = "sntp ";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            tmpstr = &tmpstr[cmdlen];
+            tmplen -= cmdlen;
+
+            r = esp8266at_cli_at_config_sntp(esp8266at, tmpstr, tmplen, arg);
             break;
         }
 
@@ -296,6 +355,32 @@ int esp8266at_cli_at_config_ap(esp8266at_t *esp8266at, char *str, int len, void 
     {
         sscanf(str, "%s %s", esp8266at->ssid, esp8266at->passwd);
         r = 0;
+
+        break;
+    } while (1);
+
+    return r;
+}
+
+int esp8266at_cli_at_config_sntp(esp8266at_t *esp8266at, char *str, int len, void *arg)
+{
+    int r = -1;
+    int enable = 0;
+    int timezone = 0;
+
+    do
+    {
+        esp8266at->sntp_enable = 0;
+        esp8266at->sntp_timezone = 0;
+        memset(esp8266at->sntp_server_addr, 0, ESP8266AT_SNTP_SERVER_MAX * ESP8266AT_SNTP_SERVER_ADDR_LENGTH_MAX);
+        sscanf(str, "%d %d %s %s %s", &enable, &timezone, 
+            esp8266at->sntp_server_addr[0], esp8266at->sntp_server_addr[1], esp8266at->sntp_server_addr[2]);
+        esp8266at->sntp_enable = enable;
+        esp8266at->sntp_timezone = timezone;
+
+        r = esp8266at_cmd_at_cipsntpcfg(esp8266at, enable, timezone,
+            esp8266at->sntp_server_addr[0], esp8266at->sntp_server_addr[1], esp8266at->sntp_server_addr[2],
+            _timeoutms, NULL);
 
         break;
     } while (1);
@@ -559,6 +644,42 @@ int esp8266at_cli_at_conn_recv(esp8266at_t *esp8266at, char *str, int len, void 
     return r;
 }
 
+
+int esp8266at_cli_rdate(esp8266at_t *esp8266at, char *str, int len, void *arg)
+{
+    int r;
+    esp8266at_err_t err;
+
+    struct timeval tv;
+    struct tm tm_data;
+
+    r = -1;
+    do
+    {
+        err = esp8266at_cmd_at_cipsntptime(esp8266at, &tm_data, _timeoutms, NULL);
+        if (err != ESP8266AT_ERR_OK)
+        {
+            break;
+        }
+
+        if (tm_data.tm_year <= 70)
+        {
+            err = ESP8266AT_ERR_ERROR;
+            break;
+        }
+
+        tv.tv_sec = mktime(&tm_data);
+        tv.tv_usec = 0;
+        settimeofday(&tv, NULL);
+
+        r = 0;
+        break;
+    } while(1);
+
+    printf("result : err = %d\n", err);
+
+    return r;
+}
 
 int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *arg)
 {
