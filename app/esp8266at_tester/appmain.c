@@ -172,7 +172,7 @@ static void clihelphookfunc()
     printf("        1 : enable\n");
     printf("    <tz> : timezone (-11 to 13)\n");
     printf("    <server> : sntp server address");
-    printf("\n");
+    printf("at c mqtt <client_id> <username> <passwd>   : Set MQTT connection information\n");
     printf("at ap join                          : Join to an AP\n");
     printf("at ap quit                          : Quit from the AP\n");
     printf("at ap ip                            : Query local IP\n");
@@ -184,11 +184,32 @@ static void clihelphookfunc()
     printf("at conn send <data>                 : Send data\n");
     printf("at conn recv <len>                  : Receive data\n");
     printf("\n");
-    printf("rdate                               : sync system time with NSTP time\n");
+    printf("at mqtt open <ip> <port> <reconnect>            : Open MQTT connection\n");
+    printf("    <reconnect> :\n");
+    printf("        0 : MQTT will not reconnect automatically.\n");
+    printf("        1 : MQTT will reconnect automatically. It takes more resources.\n");
+    printf("at mqtt close                                   : Close MQTT connection\n");
+    printf("at mqtt sub <topic> <qos>                       : Subscribe to defined MQTT topics with defined QoS.\n");
+    printf("    <qos> :\n");
+    printf("        0 : Up to once\n");
+    printf("        1 : At least once\n");
+    printf("        2 : Exactly once\n");
+    printf("at mqtt sub                                     : List all MQTT topics that have been already subscribed\n");
+    printf("at mqtt pub <topic> <data> <qos> <retain>       : Publish MQTT messages in string to a defined topic.\n");
+    printf("    <qos> :\n");
+    printf("        0 : Up to once\n");
+    printf("        1 : At least once\n");
+    printf("        2 : Exactly once\n");
+    printf("    <retain> :\n");
+    printf("        0 : Not retained\n");
+    printf("        1 : Retained\n");
+    printf("\n");
+    printf("rdate                                           : sync system time with NSTP time\n");
     printf("\n");
     printf("echo client <ssid> <passwd> <ip> <port> <count> : echo client test\n");
     printf("\n");
     printf("echo client2\n");
+    printf("\n");
 }
 
 static void esp8266at_cli_echo_client2(esp8266at_t *esp8266at)
