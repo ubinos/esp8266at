@@ -31,6 +31,9 @@ extern "C"
 #define ESP8266AT_SSID_LENGTH_MAX 64
 #define ESP8266AT_PASSWD_LENGTH_MAX 64
 
+#define ESP8266AT_DNS_SERVER_ADDR_LENGTH_MAX 64
+#define ESP8266AT_DNS_SERVER_MAX 3
+
 #define ESP8266AT_SNTP_SERVER_ADDR_LENGTH_MAX 64
 #define ESP8266AT_SNTP_SERVER_MAX 3
 
@@ -106,6 +109,9 @@ typedef struct _esp8266at_t
 
     char ssid[ESP8266AT_SSID_LENGTH_MAX];
     char passwd[ESP8266AT_PASSWD_LENGTH_MAX];
+
+    uint8_t dns_enable;
+    char dns_server_addr[ESP8266AT_DNS_SERVER_MAX][ESP8266AT_DNS_SERVER_ADDR_LENGTH_MAX];
 
     uint8_t sntp_enable;
     int8_t sntp_timezone;

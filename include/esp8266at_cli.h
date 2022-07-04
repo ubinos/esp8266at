@@ -29,6 +29,7 @@ void esp8266at_cli_at_interactive(esp8266at_t *esp8266at);
 void esp8266at_cli_at_test(esp8266at_t *esp8266at);
 void esp8266at_cli_at_restart(esp8266at_t *esp8266at);
 void esp8266at_cli_at_query_version(esp8266at_t *esp8266at);
+void esp8266at_cli_at_query_dns(esp8266at_t *esp8266at);
 void esp8266at_cli_at_query_sntpcfg(esp8266at_t *esp8266at);
 void esp8266at_cli_at_query_sntptime(esp8266at_t *esp8266at);
 
@@ -37,7 +38,8 @@ int esp8266at_cli_at_config_echo(esp8266at_t *esp8266at, char *str, int len, voi
 int esp8266at_cli_at_config_wmode(esp8266at_t *esp8266at, char *str, int len, void *arg);
 int esp8266at_cli_at_config_ipmux(esp8266at_t *esp8266at, char *str, int len, void *arg);
 int esp8266at_cli_at_config_ap(esp8266at_t *esp8266at, char *str, int len, void *arg);
-int esp8266at_cli_at_config_sntp(esp8266at_t *esp8266at, char *str, int len, void *arg);
+int esp8266at_cli_at_config_dns(esp8266at_t *esp8266at, char *str, int len, void *arg);
+int esp8266at_cli_at_config_sntpcfg(esp8266at_t *esp8266at, char *str, int len, void *arg);
 
 int esp8266at_cli_at_ap(esp8266at_t *esp8266at, char *str, int len, void *arg);
 int esp8266at_cli_at_ap_join(esp8266at_t *esp8266at, char *str, int len, void *arg);

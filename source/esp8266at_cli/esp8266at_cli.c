@@ -77,6 +77,15 @@ int esp8266at_cli_at(esp8266at_t *esp8266at, char *str, int len, void *arg)
             break;
         }
 
+        cmd = "dns";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            esp8266at_cli_at_query_dns(esp8266at);
+            r = 0;
+            break;
+        }
+
         cmd = "sntp";
         cmdlen = strlen(cmd);
         if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
@@ -167,6 +176,22 @@ void esp8266at_cli_at_query_version(esp8266at_t *esp8266at)
     printf("result : err = %d, version = %s\n", err, esp8266at->version);
 }
 
+void esp8266at_cli_at_query_dns(esp8266at_t *esp8266at)
+{
+    esp8266at_err_t err;
+
+    err = esp8266at_cmd_at_cipdns_q(esp8266at, _timeoutms, NULL);
+    printf("result : err = %d, enable = %d", err, esp8266at->dns_enable);
+    for (int i = 0; i < ESP8266AT_DNS_SERVER_MAX; i++)
+    {
+        if (strlen(esp8266at->dns_server_addr[i]) > 0)
+        {
+            printf(", server[%d] = %s", i, esp8266at->dns_server_addr[i]);
+        }
+    }
+    printf("\n");
+}
+
 void esp8266at_cli_at_query_sntpcfg(esp8266at_t *esp8266at)
 {
     esp8266at_err_t err;
@@ -251,6 +276,17 @@ int esp8266at_cli_at_config(esp8266at_t *esp8266at, char *str, int len, void *ar
             break;
         }
 
+        cmd = "dns ";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            tmpstr = &tmpstr[cmdlen];
+            tmplen -= cmdlen;
+
+            r = esp8266at_cli_at_config_dns(esp8266at, tmpstr, tmplen, arg);
+            break;
+        }
+
         cmd = "sntp ";
         cmdlen = strlen(cmd);
         if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
@@ -258,7 +294,7 @@ int esp8266at_cli_at_config(esp8266at_t *esp8266at, char *str, int len, void *ar
             tmpstr = &tmpstr[cmdlen];
             tmplen -= cmdlen;
 
-            r = esp8266at_cli_at_config_sntp(esp8266at, tmpstr, tmplen, arg);
+            r = esp8266at_cli_at_config_sntpcfg(esp8266at, tmpstr, tmplen, arg);
             break;
         }
 
@@ -362,7 +398,30 @@ int esp8266at_cli_at_config_ap(esp8266at_t *esp8266at, char *str, int len, void 
     return r;
 }
 
-int esp8266at_cli_at_config_sntp(esp8266at_t *esp8266at, char *str, int len, void *arg)
+int esp8266at_cli_at_config_dns(esp8266at_t *esp8266at, char *str, int len, void *arg)
+{
+    int r = -1;
+    int enable = 0;
+
+    do
+    {
+        esp8266at->dns_enable = 0;
+        memset(esp8266at->dns_server_addr, 0, ESP8266AT_DNS_SERVER_MAX * ESP8266AT_DNS_SERVER_ADDR_LENGTH_MAX);
+        sscanf(str, "%d %s %s %s", &enable,
+            esp8266at->dns_server_addr[0], esp8266at->dns_server_addr[1], esp8266at->dns_server_addr[2]);
+        esp8266at->dns_enable = enable;
+
+        r = esp8266at_cmd_at_cipdns(esp8266at, enable,
+            esp8266at->dns_server_addr[0], esp8266at->dns_server_addr[1], esp8266at->dns_server_addr[2],
+            _timeoutms, NULL);
+
+        break;
+    } while (1);
+
+    return r;
+}
+
+int esp8266at_cli_at_config_sntpcfg(esp8266at_t *esp8266at, char *str, int len, void *arg)
 {
     int r = -1;
     int enable = 0;
@@ -387,7 +446,6 @@ int esp8266at_cli_at_config_sntp(esp8266at_t *esp8266at, char *str, int len, voi
 
     return r;
 }
-
 
 int esp8266at_cli_at_ap(esp8266at_t *esp8266at, char *str, int len, void *arg)
 {

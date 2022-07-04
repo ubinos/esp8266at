@@ -58,6 +58,10 @@ esp8266at_err_t esp8266at_cmd_at_cipsend(esp8266at_t *esp8266at, uint8_t *buffer
 
 esp8266at_err_t esp8266at_cmd_at_ciprecv(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *received, uint32_t timeoutms, uint32_t *remain_timeoutms);
 
+esp8266at_err_t esp8266at_cmd_at_cipdns(esp8266at_t *esp8266at, uint8_t enable, char * dns_server_addr, char * dns_server_addr2, char * dns_server_addr3, uint32_t timeoutms, uint32_t *remain_timeoutms);
+
+esp8266at_err_t esp8266at_cmd_at_cipdns_q(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms);
+
 esp8266at_err_t esp8266at_cmd_at_cipsntpcfg(esp8266at_t *esp8266at, uint8_t enable, int8_t timezone, char * sntp_server_addr, char * sntp_server_addr2, char * sntp_server_addr3, uint32_t timeoutms, uint32_t *remain_timeoutms);
 
 esp8266at_err_t esp8266at_cmd_at_cipsntpcfg_q(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms);

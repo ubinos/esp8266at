@@ -19,6 +19,12 @@
 #undef LOGM_CATEGORY
 #define LOGM_CATEGORY LOGM_CATEGORY__USER00
 
+#if (UBINOS__BSP__BOARD_VARIATION__SPHUB == 1)
+    #define _CIPDNS_STRING "CIPDNS_CUR"
+#else
+    #define _CIPDNS_STRING "CIPDNS"
+#endif /* (UBINOS__BSP__BOARD_VARIATION__SPHUB == 1) */
+
 static esp8266at_err_t _wait_rsp(esp8266at_t *esp8266at, char *rsp, uint8_t *buffer, uint32_t length, uint32_t *received, uint32_t timeoutms,
         uint32_t *remain_timeoutms);
 static esp8266at_err_t _send_cmd_and_wait_rsp(esp8266at_t *esp8266at, char *cmd, char *rsp, uint32_t timeoutms, uint32_t *remain_timeoutms);
@@ -73,6 +79,9 @@ esp8266at_err_t esp8266at_init(esp8266at_t *esp8266at)
 
     memset(esp8266at->ssid, 0, ESP8266AT_SSID_LENGTH_MAX);
     memset(esp8266at->passwd, 0, ESP8266AT_PASSWD_LENGTH_MAX);
+
+    esp8266at->dns_enable = 0;
+    memset(esp8266at->dns_server_addr, 0, ESP8266AT_DNS_SERVER_MAX * ESP8266AT_DNS_SERVER_ADDR_LENGTH_MAX);
 
     esp8266at->sntp_enable = 0;
     esp8266at->sntp_timezone = 0;
@@ -896,6 +905,127 @@ esp8266at_err_t esp8266at_cmd_at_ciprecv(esp8266at_t *esp8266at, uint8_t *buffer
     mutex_unlock(esp8266at->io_data_read_mutex);
 
     return esp_err;
+}
+
+esp8266at_err_t esp8266at_cmd_at_cipdns(esp8266at_t *esp8266at, uint8_t enable, char * dns_server_addr, char * dns_server_addr2, char * dns_server_addr3, uint32_t timeoutms, uint32_t *remain_timeoutms)
+{
+    int r;
+    esp8266at_err_t err;
+    char *ptr1;
+
+    r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
+    timeoutms = task_getremainingtimeoutms();
+    if (r == UBIK_ERR__TIMEOUT)
+    {
+        return ESP8266AT_ERR_TIMEOUT;
+    }
+
+    sprintf(esp8266at->temp_cmd_buf, "AT+"_CIPDNS_STRING"=%d", enable);
+    ptr1 = esp8266at->temp_cmd_buf + strlen(esp8266at->temp_cmd_buf);
+    if (dns_server_addr != NULL && strlen(dns_server_addr) > 0)
+    {
+        sprintf(ptr1, ",\"%s\"", dns_server_addr);
+        ptr1 += strlen(ptr1);
+
+        if (dns_server_addr2 != NULL && strlen(dns_server_addr2) > 0)
+        {
+            sprintf(ptr1, ",\"%s\"", dns_server_addr2);
+            ptr1 += strlen(ptr1);
+
+            if (dns_server_addr3 != NULL && strlen(dns_server_addr3) > 0)
+            {
+                sprintf(ptr1, ",\"%s\"", dns_server_addr3);
+                ptr1 += strlen(ptr1);
+            }
+        }
+    }
+    sprintf(ptr1, "\r\n");
+
+    err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->temp_cmd_buf, "OK\r\n", timeoutms, &timeoutms);
+
+    if (remain_timeoutms)
+    {
+        *remain_timeoutms = timeoutms;
+    }
+
+    mutex_unlock(esp8266at->cmd_mutex);
+
+    return err;
+}
+
+esp8266at_err_t esp8266at_cmd_at_cipdns_q(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms)
+{
+    int r;
+    esp8266at_err_t err;
+    char *ptr1 = NULL;
+    char *ptr2 = NULL;
+    int size = 0;
+    const char *key = "+"_CIPDNS_STRING":";
+
+    r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
+    timeoutms = task_getremainingtimeoutms();
+    if (r == UBIK_ERR__TIMEOUT)
+    {
+        return ESP8266AT_ERR_TIMEOUT;
+    }
+
+    err = _send_cmd_and_wait_rsp(esp8266at, "AT+"_CIPDNS_STRING"?\r\n", "OK\r\n", timeoutms, &timeoutms);
+
+    if (err == ESP8266AT_ERR_OK)
+    {
+        do
+        {
+            ptr1 = strstr((char*) esp8266at->temp_resp_buf, key);
+            if (ptr1 == NULL)
+            {
+                break;
+            }
+            ptr1 = (char*) (((unsigned int) ptr1) + strlen(key));
+
+            ////
+            ptr2 = strstr(ptr1, ",");
+            if (ptr2 == NULL || ptr1 >= ptr2)
+            {
+                break;
+            }
+            *ptr2 = 0x0;
+            esp8266at->dns_enable = atoi(ptr1);
+            *ptr2 = ' ';
+
+            ////
+            for (int i = 0; i < ESP8266AT_DNS_SERVER_MAX; i++)
+            {
+                ptr1 = ptr2;
+                ptr2 = strstr(ptr1, "\"");
+                if (ptr2 == NULL || ptr1 >= ptr2)
+                {
+                    break;
+                }
+                *ptr2 = ' ';
+                ptr1 = ptr2;
+                ptr2 = strstr(ptr1, "\"");
+                if (ptr2 == NULL || ptr1 >= ptr2)
+                {
+                    break;
+                }
+                *ptr2 = ' ';
+                ptr1++;
+                size = (unsigned int) ptr2 - (unsigned int) ptr1;
+                size = min(size, ESP8266AT_DNS_SERVER_ADDR_LENGTH_MAX);
+                strncpy(esp8266at->dns_server_addr[i], ptr1, size);
+            }
+            break;
+        } while (1);
+    }
+
+    if (remain_timeoutms)
+    {
+        *remain_timeoutms = timeoutms;
+    }
+
+    mutex_unlock(esp8266at->cmd_mutex);
+
+    return err;
 }
 
 esp8266at_err_t esp8266at_cmd_at_cipsntpcfg(esp8266at_t *esp8266at, uint8_t enable, int8_t timezone, char * sntp_server_addr, char * sntp_server_addr2, char * sntp_server_addr3, uint32_t timeoutms, uint32_t *remain_timeoutms)
