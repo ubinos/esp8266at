@@ -108,7 +108,7 @@ typedef struct _esp8266at_t
     char passwd[ESP8266AT_PASSWD_LENGTH_MAX];
 
     uint8_t sntp_enable;
-    uint8_t sntp_timezone;
+    int8_t sntp_timezone;
     char sntp_server_addr[ESP8266AT_SNTP_SERVER_MAX][ESP8266AT_SNTP_SERVER_ADDR_LENGTH_MAX];
 } esp8266at_t;
 
