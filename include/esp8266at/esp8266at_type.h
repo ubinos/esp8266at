@@ -37,6 +37,10 @@ extern "C"
 #define ESP8266AT_SNTP_SERVER_ADDR_LENGTH_MAX 64
 #define ESP8266AT_SNTP_SERVER_MAX 3
 
+#define ESP8266AT_MQTT_CLIENT_ID_LENGTH_MAX 64
+#define ESP8266AT_MQTT_USERNAME_LENGTH_MAX 64
+#define ESP8266AT_MQTT_PASSWD_LENGTH_MAX 64
+
 #define ESP8266AT_TEMP_CMD_BUF_SIZE 256
 #define ESP8266AT_TEMP_RESP_BUF_SIZE 256
 
@@ -116,6 +120,11 @@ typedef struct _esp8266at_t
     uint8_t sntp_enable;
     int8_t sntp_timezone;
     char sntp_server_addr[ESP8266AT_SNTP_SERVER_MAX][ESP8266AT_SNTP_SERVER_ADDR_LENGTH_MAX];
+
+    uint8_t mqtt_scheme;
+    char mqtt_client_id[ESP8266AT_MQTT_CLIENT_ID_LENGTH_MAX];
+    char mqtt_username[ESP8266AT_MQTT_USERNAME_LENGTH_MAX];
+    char mqtt_passwd[ESP8266AT_MQTT_PASSWD_LENGTH_MAX];
 } esp8266at_t;
 
 #ifdef __cplusplus

@@ -137,6 +137,17 @@ int esp8266at_cli_at(esp8266at_t *esp8266at, char *str, int len, void *arg)
             break;
         }
 
+        cmd = "mqtt ";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            tmpstr = &tmpstr[cmdlen];
+            tmplen -= cmdlen;
+
+            r = esp8266at_cli_at_mqtt(esp8266at, tmpstr, tmplen, arg);
+            break;
+        }
+
         break;
     } while (1);
 
@@ -298,6 +309,17 @@ int esp8266at_cli_at_config(esp8266at_t *esp8266at, char *str, int len, void *ar
             break;
         }
 
+        cmd = "mqtt ";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            tmpstr = &tmpstr[cmdlen];
+            tmplen -= cmdlen;
+
+            r = esp8266at_cli_at_config_mqttusercfg(esp8266at, tmpstr, tmplen, arg);
+            break;
+        }
+
         break;
     } while (1);
 
@@ -439,6 +461,32 @@ int esp8266at_cli_at_config_sntpcfg(esp8266at_t *esp8266at, char *str, int len, 
 
         r = esp8266at_cmd_at_cipsntpcfg(esp8266at, enable, timezone,
             esp8266at->sntp_server_addr[0], esp8266at->sntp_server_addr[1], esp8266at->sntp_server_addr[2],
+            _timeoutms, NULL);
+
+        break;
+    } while (1);
+
+    return r;
+}
+
+int esp8266at_cli_at_config_mqttusercfg(esp8266at_t *esp8266at, char *str, int len, void *arg)
+{
+    int r = -1;
+    int mqtt_scheme = 1;
+
+    do
+    {
+        esp8266at->mqtt_scheme = 1;
+        memset(esp8266at->mqtt_client_id, 0, ESP8266AT_MQTT_CLIENT_ID_LENGTH_MAX);
+        memset(esp8266at->mqtt_username, 0, ESP8266AT_MQTT_USERNAME_LENGTH_MAX);
+        memset(esp8266at->mqtt_passwd, 0, ESP8266AT_MQTT_PASSWD_LENGTH_MAX);
+
+        sscanf(str, "%d %s %s %s", &mqtt_scheme,
+            esp8266at->mqtt_client_id, esp8266at->mqtt_username, esp8266at->mqtt_passwd);
+        esp8266at->mqtt_scheme = mqtt_scheme;
+
+        r = esp8266at_cmd_at_mqttusercfg(esp8266at, mqtt_scheme,
+            esp8266at->mqtt_client_id, esp8266at->mqtt_username, esp8266at->mqtt_passwd,
             _timeoutms, NULL);
 
         break;
@@ -702,6 +750,119 @@ int esp8266at_cli_at_conn_recv(esp8266at_t *esp8266at, char *str, int len, void 
     return r;
 }
 
+int esp8266at_cli_at_mqtt(esp8266at_t *esp8266at, char *str, int len, void *arg)
+{
+    int r = -1;
+    char *tmpstr;
+    int tmplen;
+    char *cmd = NULL;
+    int cmdlen = 0;
+
+    tmpstr = str;
+    tmplen = len;
+
+    do
+    {
+        cmd = "open ";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            tmpstr = &tmpstr[cmdlen];
+            tmplen -= cmdlen;
+
+            r = esp8266at_cli_at_mqtt_open(esp8266at, tmpstr, tmplen, arg);
+            break;
+        }
+
+        cmd = "close";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            tmpstr = &tmpstr[cmdlen];
+            tmplen -= cmdlen;
+
+            r = esp8266at_cli_at_mqtt_close(esp8266at, tmpstr, tmplen, arg);
+            break;
+        }
+
+        cmd = "pub ";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            tmpstr = &tmpstr[cmdlen];
+            tmplen -= cmdlen;
+
+            r = esp8266at_cli_at_mqtt_pub(esp8266at, tmpstr, tmplen, arg);
+            break;
+        }
+
+        break;
+    } while (1);
+
+    return r;
+}
+
+int esp8266at_cli_at_mqtt_open(esp8266at_t *esp8266at, char *str, int len, void *arg)
+{
+    int r = -1;
+
+    esp8266at_err_t err;
+    char ip[128];
+    uint32_t port;
+    uint32_t reconnect;
+
+    do
+    {
+        sscanf(str, "%s %lu %lu", ip, &port, &reconnect);
+        err = esp8266at_cmd_at_mqttconn(esp8266at, ip, port, reconnect, _timeoutms, NULL);
+        printf("result : err = %d\n", err);
+        r = 0;
+
+        break;
+    } while (1);
+
+    return r;
+}
+
+int esp8266at_cli_at_mqtt_close(esp8266at_t *esp8266at, char *str, int len, void *arg)
+{
+    int r = -1;
+    esp8266at_err_t err;
+
+    do
+    {
+        err = esp8266at_cmd_at_mqttclean(esp8266at, _timeoutms, NULL);
+        printf("result : err = %d\n", err);
+        r = 0;
+
+        break;
+    } while (1);
+
+    return r;
+}
+
+int esp8266at_cli_at_mqtt_pub(esp8266at_t *esp8266at, char *str, int len, void *arg)
+{
+    int r = -1;
+    esp8266at_err_t err;
+    char topic[128];
+    char data[128];
+    uint32_t qos;
+    uint32_t retain;
+
+    do
+    {
+        sscanf(str, "%s %s %lu %lu", topic, data, &qos, &retain);
+        err = esp8266at_cmd_at_mqttpub(esp8266at, topic, data, qos, retain, _timeoutms, NULL);
+        printf("result : err = %d\n", err);
+        r = 0;
+
+        break;
+    } while (1);
+
+    return r;
+
+}
 
 int esp8266at_cli_rdate(esp8266at_t *esp8266at, char *str, int len, void *arg)
 {

@@ -68,6 +68,14 @@ esp8266at_err_t esp8266at_cmd_at_cipsntpcfg_q(esp8266at_t *esp8266at, uint32_t t
 
 esp8266at_err_t esp8266at_cmd_at_cipsntptime(esp8266at_t *esp8266at, struct tm * tm_ptr, uint32_t timeoutms, uint32_t *remain_timeoutms);
 
+esp8266at_err_t esp8266at_cmd_at_mqttusercfg(esp8266at_t *esp8266at, uint8_t mqtt_scheme, char * mqtt_client_id, char * mqtt_username, char * mqtt_passwd, uint32_t timeoutms, uint32_t *remain_timeoutms);
+
+esp8266at_err_t esp8266at_cmd_at_mqttconn(esp8266at_t *esp8266at, char *ip, uint32_t port, uint32_t reconnect, uint32_t timeoutms, uint32_t *remain_timeoutms);
+
+esp8266at_err_t esp8266at_cmd_at_mqttclean(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms);
+
+esp8266at_err_t esp8266at_cmd_at_mqttpub(esp8266at_t *esp8266at, char *topic, char *data, uint32_t qos, uint32_t retain, uint32_t timeoutms, uint32_t *remain_timeoutms);
+
 #ifdef __cplusplus
 }
 #endif
