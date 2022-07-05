@@ -60,6 +60,11 @@ extern "C"
 
 #define ESP8266AT_IO_DATA_BUF_SIZE 256
 
+#define ESP8266AT_IO_MQTT_KEY "+MQTTSUBRECV:0,"
+#define ESP8266AT_IO_MQTT_KEY_LEN 15
+
+#define ESP8266AT_IO_MQTT_TOPIC_BUF_SIZE 128
+
 typedef enum
 {
     ESP8266AT_ERR_OK = 0,
@@ -74,6 +79,7 @@ typedef enum
     ESP8266AT_IO_RX_MODE_RESP = 0,
     ESP8266AT_IO_RX_MODE_DATA_LEN,
     ESP8266AT_IO_RX_MODE_DATA,
+    ESP8266AT_IO_RX_MODE_MQTT_TOPIC,
 } esp8266at_io_rx_mode_t;
 
 typedef struct _esp8266at_t
@@ -125,6 +131,12 @@ typedef struct _esp8266at_t
     char mqtt_client_id[ESP8266AT_MQTT_CLIENT_ID_LENGTH_MAX];
     char mqtt_username[ESP8266AT_MQTT_USERNAME_LENGTH_MAX];
     char mqtt_passwd[ESP8266AT_MQTT_PASSWD_LENGTH_MAX];
+
+    uint8_t io_mqtt_topic_buf[ESP8266AT_IO_MQTT_TOPIC_BUF_SIZE];
+
+    uint8_t io_is_mqtt;
+    uint32_t io_mqtt_key_i;
+    uint32_t io_mqtt_topic_i;
 } esp8266at_t;
 
 #ifdef __cplusplus

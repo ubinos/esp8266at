@@ -197,12 +197,6 @@ static void clihelphookfunc()
     printf("        0 : MQTT will not reconnect automatically.\n");
     printf("        1 : MQTT will reconnect automatically. It takes more resources.\n");
     printf("at mqtt close                                   : Close MQTT connection\n");
-    printf("at mqtt sub <topic> <qos>                       : Subscribe to defined MQTT topics with defined QoS.\n");
-    printf("    <qos> :\n");
-    printf("        0 : Up to once\n");
-    printf("        1 : At least once\n");
-    printf("        2 : Exactly once\n");
-    printf("at mqtt sub                                     : List all MQTT topics that have been already subscribed\n");
     printf("at mqtt pub <topic> <data> <qos> <retain>       : Publish MQTT messages in string to a defined topic.\n");
     printf("    <qos> :\n");
     printf("        0 : Up to once\n");
@@ -211,6 +205,13 @@ static void clihelphookfunc()
     printf("    <retain> :\n");
     printf("        0 : Not retained\n");
     printf("        1 : Retained\n");
+    printf("at mqtt sub <topic> <qos>                       : Subscribe to defined MQTT topics with defined QoS.\n");
+    printf("    <qos> :\n");
+    printf("        0 : Up to once\n");
+    printf("        1 : At least once\n");
+    printf("        2 : Exactly once\n");
+    printf("at mqtt sublist                                 : List all MQTT topics that have been already subscribed\n");
+    printf("at mqtt subget <topic> <len>                    : Get subscribed data\n");
     printf("\n");
     printf("rdate                                           : sync system time with NSTP time\n");
     printf("\n");

@@ -92,6 +92,9 @@ esp8266at_err_t esp8266at_init(esp8266at_t *esp8266at)
     memset(esp8266at->mqtt_username, 0, ESP8266AT_MQTT_USERNAME_LENGTH_MAX);
     memset(esp8266at->mqtt_passwd, 0, ESP8266AT_MQTT_PASSWD_LENGTH_MAX);
 
+    esp8266at->io_mqtt_key_i = 0;
+    esp8266at->io_mqtt_topic_i = 0;
+
     esp_err = ESP8266AT_ERR_OK;
 
     return esp_err;
@@ -397,6 +400,7 @@ esp8266at_err_t esp8266at_cmd_at_rst(esp8266at_t *esp8266at, uint32_t timeoutms,
 
     esp8266at->io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
     esp8266at->io_data_key_i = 0;
+    esp8266at->io_mqtt_key_i = 0;
 
     err = _send_cmd_and_wait_rsp(esp8266at, "AT+RST\r\n", "OK\r\n", timeoutms, &timeoutms);
 
@@ -1434,7 +1438,55 @@ esp8266at_err_t esp8266at_cmd_at_mqttpub(esp8266at_t *esp8266at, char *topic, ch
     return err;
 }
 
+esp8266at_err_t esp8266at_cmd_at_mqttsub(esp8266at_t *esp8266at, char *topic, uint32_t qos, uint32_t timeoutms, uint32_t *remain_timeoutms)
+{
+    int r;
+    esp8266at_err_t err;
 
+    r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
+    timeoutms = task_getremainingtimeoutms();
+    if (r == UBIK_ERR__TIMEOUT)
+    {
+        return ESP8266AT_ERR_TIMEOUT;
+    }
+
+    sprintf(esp8266at->temp_cmd_buf, "AT+MQTTSUB=0,\"%s\",%lu\r\n", topic, qos);
+    err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->temp_cmd_buf, "OK\r\n", timeoutms, &timeoutms);
+
+    if (remain_timeoutms)
+    {
+        *remain_timeoutms = timeoutms;
+    }
+
+    mutex_unlock(esp8266at->cmd_mutex);
+
+    return err;
+}
+
+esp8266at_err_t esp8266at_cmd_at_mqttsub_q(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms)
+{
+    int r;
+    esp8266at_err_t err;
+
+    r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
+    timeoutms = task_getremainingtimeoutms();
+    if (r == UBIK_ERR__TIMEOUT)
+    {
+        return ESP8266AT_ERR_TIMEOUT;
+    }
+
+    sprintf(esp8266at->temp_cmd_buf, "AT+MQTTSUB?\r\n");
+    err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->temp_cmd_buf, "OK\r\n", timeoutms, &timeoutms);
+
+    if (remain_timeoutms)
+    {
+        *remain_timeoutms = timeoutms;
+    }
+
+    mutex_unlock(esp8266at->cmd_mutex);
+
+    return err;
+}
 
 #endif /* (INCLUDE__ESP8266AT == 1) */
 

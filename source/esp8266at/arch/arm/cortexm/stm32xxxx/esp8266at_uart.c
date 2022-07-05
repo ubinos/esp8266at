@@ -24,6 +24,7 @@
 #include "main.h"
 
 static const char * _data_key = ESP8266AT_IO_DATA_KEY;
+static const char * _mqtt_key = ESP8266AT_IO_MQTT_KEY;
 
 static void esp8266at_uart_reset(void);
 
@@ -34,6 +35,7 @@ void esp8266_uart_rx_callback(void)
     uint32_t len;
     cbuf_pt rbuf;
     sem_pt rsem;
+    char len_end;
 
     len = ESP8266AT_IO_TEMP_RX_BUF_SIZE;
     buf = _g_esp8266at.io_temp_rx_buf;
@@ -56,7 +58,24 @@ void esp8266_uart_rx_callback(void)
         {
             _g_esp8266at.io_data_len = 0;
             _g_esp8266at.io_data_len_i = 0;
+            _g_esp8266at.io_is_mqtt = 0;
             _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_DATA_LEN;
+            break;
+        }
+
+        if (_mqtt_key[_g_esp8266at.io_mqtt_key_i] == buf[0])
+        {
+            _g_esp8266at.io_mqtt_key_i++;
+        }
+        else
+        {
+            _g_esp8266at.io_mqtt_key_i = 0;
+        }
+        if (_g_esp8266at.io_mqtt_key_i == ESP8266AT_IO_MQTT_KEY_LEN)
+        {
+            _g_esp8266at.io_is_mqtt = 1;
+            _g_esp8266at.io_mqtt_topic_i = 0;
+            _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_MQTT_TOPIC;
             break;
         }
 
@@ -80,17 +99,57 @@ void esp8266_uart_rx_callback(void)
 
         break;
 
+    case ESP8266AT_IO_RX_MODE_MQTT_TOPIC:
+        rbuf = _g_esp8266at.io_read_buf;
+        rsem = _g_esp8266at.io_read_sem;
+
+        if (',' == buf[0])
+        {
+            _g_esp8266at.io_mqtt_topic_buf[_g_esp8266at.io_mqtt_topic_i] = 0;
+
+            _g_esp8266at.io_data_len = 0;
+            _g_esp8266at.io_data_len_i = 0;
+            _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_DATA_LEN;
+            break;
+        }
+
+        if (_g_esp8266at.io_mqtt_topic_i >= ESP8266AT_IO_MQTT_TOPIC_BUF_SIZE - 1)
+        {
+            _g_esp8266at.io_data_key_i = 0;
+            _g_esp8266at.io_mqtt_key_i = 0;
+            _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
+            break;
+        }
+
+        if ('"' != buf[0])
+        {
+            _g_esp8266at.io_mqtt_topic_buf[_g_esp8266at.io_mqtt_topic_i] = buf[0];
+            _g_esp8266at.io_mqtt_topic_i++;
+        }
+
+        break;
+
     case ESP8266AT_IO_RX_MODE_DATA_LEN:
         rbuf = _g_esp8266at.io_read_buf;
         rsem = _g_esp8266at.io_read_sem;
 
-        if (':' == buf[0])
+        if (_g_esp8266at.io_is_mqtt)
+        {
+            len_end = ',';
+        }
+        else
+        {
+            len_end = ':';
+        }
+
+        if (len_end == buf[0])
         {
             _g_esp8266at.io_data_len_buf[_g_esp8266at.io_data_len_i] = 0;
             _g_esp8266at.io_data_len = atoi((char*) _g_esp8266at.io_data_len_buf);
             if (_g_esp8266at.io_data_len > ESP8266AT_IO_DATA_LEN_MAX)
             {
                 _g_esp8266at.io_data_key_i = 0;
+                _g_esp8266at.io_mqtt_key_i = 0;
                 _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
                 break;
             }
@@ -103,6 +162,7 @@ void esp8266_uart_rx_callback(void)
         if (_g_esp8266at.io_data_len_i >= ESP8266AT_IO_DATA_LEN_BUF_SIZE - 1)
         {
             _g_esp8266at.io_data_key_i = 0;
+            _g_esp8266at.io_mqtt_key_i = 0;
             _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
             break;
         }
@@ -125,6 +185,7 @@ void esp8266_uart_rx_callback(void)
             if (_g_esp8266at.io_data_read >= _g_esp8266at.io_data_len)
             {
                 _g_esp8266at.io_data_key_i = 0;
+                _g_esp8266at.io_mqtt_key_i = 0;
                 _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
             }
             break;
@@ -144,6 +205,7 @@ void esp8266_uart_rx_callback(void)
         if (_g_esp8266at.io_data_read >= _g_esp8266at.io_data_len)
         {
             _g_esp8266at.io_data_key_i = 0;
+            _g_esp8266at.io_mqtt_key_i = 0;
             _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
         }
 

@@ -747,6 +747,8 @@ int esp8266at_cli_at_conn_recv(esp8266at_t *esp8266at, char *str, int len, void 
 
     printf("result : err = %d\n", err);
 
+    r = 0;
+
     return r;
 }
 
@@ -793,6 +795,28 @@ int esp8266at_cli_at_mqtt(esp8266at_t *esp8266at, char *str, int len, void *arg)
             tmplen -= cmdlen;
 
             r = esp8266at_cli_at_mqtt_pub(esp8266at, tmpstr, tmplen, arg);
+            break;
+        }
+
+        cmd = "sub ";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            tmpstr = &tmpstr[cmdlen];
+            tmplen -= cmdlen;
+
+            r = esp8266at_cli_at_mqtt_sub(esp8266at, tmpstr, tmplen, arg);
+            break;
+        }
+
+        cmd = "sublist";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            tmpstr = &tmpstr[cmdlen];
+            tmplen -= cmdlen;
+
+            r = esp8266at_cli_at_mqtt_sublist(esp8266at, tmpstr, tmplen, arg);
             break;
         }
 
@@ -854,6 +878,48 @@ int esp8266at_cli_at_mqtt_pub(esp8266at_t *esp8266at, char *str, int len, void *
     {
         sscanf(str, "%s %s %lu %lu", topic, data, &qos, &retain);
         err = esp8266at_cmd_at_mqttpub(esp8266at, topic, data, qos, retain, _timeoutms, NULL);
+        printf("result : err = %d\n", err);
+        r = 0;
+
+        break;
+    } while (1);
+
+    return r;
+
+}
+
+int esp8266at_cli_at_mqtt_sub(esp8266at_t *esp8266at, char *str, int len, void *arg)
+{
+    int r = -1;
+    esp8266at_err_t err;
+    char topic[128];
+    uint32_t qos;
+
+    do
+    {
+        sscanf(str, "%s %lu", topic, &qos);
+        err = esp8266at_cmd_at_mqttsub(esp8266at, topic, qos, _timeoutms, NULL);
+        printf("result : err = %d\n", err);
+        r = 0;
+
+        break;
+    } while (1);
+
+    return r;
+
+}
+
+int esp8266at_cli_at_mqtt_sublist(esp8266at_t *esp8266at, char *str, int len, void *arg)
+{
+    int r = -1;
+    esp8266at_err_t err;
+    char topic[128];
+    uint32_t qos;
+
+    do
+    {
+        sscanf(str, "%s %lu", topic, &qos);
+        err = esp8266at_cmd_at_mqttsub_q(esp8266at, _timeoutms, NULL);
         printf("result : err = %d\n", err);
         r = 0;
 
