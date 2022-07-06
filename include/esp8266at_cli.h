@@ -59,6 +59,7 @@ int esp8266at_cli_at_mqtt_close(esp8266at_t *esp8266at, char *str, int len, void
 int esp8266at_cli_at_mqtt_pub(esp8266at_t *esp8266at, char *str, int len, void *arg);
 int esp8266at_cli_at_mqtt_sub(esp8266at_t *esp8266at, char *str, int len, void *arg);
 int esp8266at_cli_at_mqtt_sublist(esp8266at_t *esp8266at, char *str, int len, void *arg);
+int esp8266at_cli_at_mqtt_unsub(esp8266at_t *esp8266at, char *str, int len, void *arg);
 int esp8266at_cli_at_mqtt_subget(esp8266at_t *esp8266at, char *str, int len, void *arg);
 
 int esp8266at_cli_rdate(esp8266at_t *esp8266at, char *str, int len, void *arg);

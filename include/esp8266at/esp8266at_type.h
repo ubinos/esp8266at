@@ -63,7 +63,10 @@ extern "C"
 #define ESP8266AT_IO_MQTT_KEY "+MQTTSUBRECV:0,"
 #define ESP8266AT_IO_MQTT_KEY_LEN 15
 
-#define ESP8266AT_IO_MQTT_TOPIC_BUF_SIZE 128
+#define ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX 128
+#define ESP8266AT_IO_MQTT_SUB_DATA_BUF_SIZE 1024
+#define ESP8266AT_IO_MQTT_SUB_BUF_MAX 3
+#define ESP8266AT_IO_MQTT_SUB_BUF_MSG_MAX 5
 
 typedef enum
 {
@@ -72,6 +75,7 @@ typedef enum
     ESP8266AT_ERR_TIMEOUT,
     ESP8266AT_ERR_BUSY,
     ESP8266AT_ERR_IO_ERROR,
+    ESP8266AT_ERR_IO_OVERFLOW,
 } esp8266at_err_t;
 
 typedef enum
@@ -81,6 +85,15 @@ typedef enum
     ESP8266AT_IO_RX_MODE_DATA,
     ESP8266AT_IO_RX_MODE_MQTT_TOPIC,
 } esp8266at_io_rx_mode_t;
+
+typedef uint32_t esp8266at_mqtt_sub_buf_msg_t;
+typedef struct _esp8266at_mqtt_sub_buf_t
+{
+    char topic[ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX];
+    msgq_pt msgs;
+    cbuf_pt data_buf;
+    mutex_pt data_mutex;
+} esp8266at_mqtt_sub_buf_t;
 
 typedef struct _esp8266at_t
 {
@@ -132,9 +145,12 @@ typedef struct _esp8266at_t
     char mqtt_username[ESP8266AT_MQTT_USERNAME_LENGTH_MAX];
     char mqtt_passwd[ESP8266AT_MQTT_PASSWD_LENGTH_MAX];
 
-    uint8_t io_mqtt_topic_buf[ESP8266AT_IO_MQTT_TOPIC_BUF_SIZE];
+    esp8266at_mqtt_sub_buf_t mqtt_sub_bufs[ESP8266AT_IO_MQTT_SUB_BUF_MAX];
+
+    uint8_t io_mqtt_topic_buf[ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX];
 
     uint8_t io_is_mqtt;
+    int32_t io_mqtt_sub_buf_id;
     uint32_t io_mqtt_key_i;
     uint32_t io_mqtt_topic_i;
 } esp8266at_t;

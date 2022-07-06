@@ -92,6 +92,17 @@ esp8266at_err_t esp8266at_init(esp8266at_t *esp8266at)
     memset(esp8266at->mqtt_username, 0, ESP8266AT_MQTT_USERNAME_LENGTH_MAX);
     memset(esp8266at->mqtt_passwd, 0, ESP8266AT_MQTT_PASSWD_LENGTH_MAX);
 
+    for (int i = 0; i < ESP8266AT_IO_MQTT_SUB_BUF_MAX; i++)
+    {
+        memset(esp8266at->mqtt_sub_bufs[i].topic, 0, ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX);
+        ubi_err = msgq_create(&esp8266at->mqtt_sub_bufs[i].msgs, sizeof(esp8266at_mqtt_sub_buf_msg_t), ESP8266AT_IO_MQTT_SUB_BUF_MSG_MAX);
+        assert(ubi_err == UBI_ERR_OK);
+        ubi_err = cbuf_create(&esp8266at->mqtt_sub_bufs[i].data_buf, ESP8266AT_IO_MQTT_SUB_DATA_BUF_SIZE);
+        assert(ubi_err == UBI_ERR_OK);
+        ubi_err = mutex_create(&esp8266at->mqtt_sub_bufs[i].data_mutex);
+        assert(ubi_err == UBI_ERR_OK);
+    }
+
     esp8266at->io_mqtt_key_i = 0;
     esp8266at->io_mqtt_topic_i = 0;
 
@@ -122,6 +133,13 @@ esp8266at_err_t esp8266at_deinit(esp8266at_t *esp8266at)
     mutex_delete(&esp8266at->io_mutex);
 
     mutex_delete(&esp8266at->cmd_mutex);
+
+    for (int i = 0; i < ESP8266AT_IO_MQTT_SUB_BUF_MAX; i++)
+    {
+        cbuf_delete(&esp8266at->mqtt_sub_bufs[i].data_buf);
+        msgq_delete(&esp8266at->mqtt_sub_bufs[i].msgs);
+        mutex_delete(&esp8266at->mqtt_sub_bufs[i].data_mutex);
+    }
 
     return esp_err;
 }
@@ -850,8 +868,7 @@ esp8266at_err_t esp8266at_cmd_at_cipsend(esp8266at_t *esp8266at, uint8_t *buffer
     return err;
 }
 
-esp8266at_err_t esp8266at_cmd_at_ciprecv(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *received, uint32_t timeoutms,
-        uint32_t *remain_timeoutms)
+esp8266at_err_t esp8266at_cmd_at_ciprecv(esp8266at_t *esp8266at, uint8_t *buffer, uint32_t length, uint32_t *received, uint32_t timeoutms, uint32_t *remain_timeoutms)
 {
     int r;
     esp8266at_err_t esp_err;
@@ -1438,10 +1455,15 @@ esp8266at_err_t esp8266at_cmd_at_mqttpub(esp8266at_t *esp8266at, char *topic, ch
     return err;
 }
 
-esp8266at_err_t esp8266at_cmd_at_mqttsub(esp8266at_t *esp8266at, char *topic, uint32_t qos, uint32_t timeoutms, uint32_t *remain_timeoutms)
+esp8266at_err_t esp8266at_cmd_at_mqttsub(esp8266at_t *esp8266at, uint32_t id, char *topic, uint32_t qos, uint32_t timeoutms, uint32_t *remain_timeoutms)
 {
     int r;
     esp8266at_err_t err;
+
+    if (id >= ESP8266AT_IO_MQTT_SUB_BUF_MAX)
+    {
+        return ESP8266AT_ERR_ERROR;
+    }
 
     r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
     timeoutms = task_getremainingtimeoutms();
@@ -1449,6 +1471,8 @@ esp8266at_err_t esp8266at_cmd_at_mqttsub(esp8266at_t *esp8266at, char *topic, ui
     {
         return ESP8266AT_ERR_TIMEOUT;
     }
+
+    strncpy(esp8266at->mqtt_sub_bufs[id].topic, topic, ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX);
 
     sprintf(esp8266at->temp_cmd_buf, "AT+MQTTSUB=0,\"%s\",%lu\r\n", topic, qos);
     err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->temp_cmd_buf, "OK\r\n", timeoutms, &timeoutms);
@@ -1486,6 +1510,113 @@ esp8266at_err_t esp8266at_cmd_at_mqttsub_q(esp8266at_t *esp8266at, uint32_t time
     mutex_unlock(esp8266at->cmd_mutex);
 
     return err;
+}
+
+esp8266at_err_t esp8266at_cmd_at_mqttunsub(esp8266at_t *esp8266at, uint32_t id, uint32_t timeoutms, uint32_t *remain_timeoutms)
+{
+    int r;
+    esp8266at_err_t err;
+
+    if (id >= ESP8266AT_IO_MQTT_SUB_BUF_MAX)
+    {
+        return ESP8266AT_ERR_ERROR;
+    }
+
+    r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
+    timeoutms = task_getremainingtimeoutms();
+    if (r == UBIK_ERR__TIMEOUT)
+    {
+        return ESP8266AT_ERR_TIMEOUT;
+    }
+
+    sprintf(esp8266at->temp_cmd_buf, "AT+MQTTUNSUB=0,\"%s\"\r\n", esp8266at->mqtt_sub_bufs[id].topic);
+    err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->temp_cmd_buf, "OK\r\n", timeoutms, &timeoutms);
+
+    if (err == ESP8266AT_ERR_OK)
+    {
+        memset(esp8266at->mqtt_sub_bufs[id].topic, 0, ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX);
+    }
+
+    if (remain_timeoutms)
+    {
+        *remain_timeoutms = timeoutms;
+    }
+
+    mutex_unlock(esp8266at->cmd_mutex);
+
+    return err;
+}
+
+esp8266at_err_t esp8266at_cmd_at_mqttsubget(esp8266at_t *esp8266at, uint32_t id, uint8_t *buffer, uint32_t max_length, uint32_t *received, uint32_t timeoutms, uint32_t *remain_timeoutms)
+{
+    int r;
+    esp8266at_err_t esp_err;
+    ubi_err_t ubi_err;
+    uint32_t read_tmp = 0;
+    uint32_t len;
+    esp8266at_mqtt_sub_buf_t *sub_buf_p = NULL;
+    esp8266at_mqtt_sub_buf_msg_t sub_msg;
+    (void) ubi_err;
+
+    if (id >= ESP8266AT_IO_MQTT_SUB_BUF_MAX)
+    {
+        return ESP8266AT_ERR_ERROR;
+    }
+
+    sub_buf_p = &esp8266at->mqtt_sub_bufs[id];
+
+    r = mutex_lock_timedms(sub_buf_p->data_mutex, timeoutms);
+    timeoutms = task_getremainingtimeoutms();
+    if (r == UBIK_ERR__TIMEOUT)
+    {
+        return ESP8266AT_ERR_TIMEOUT;
+    }
+
+    do
+    {
+        r = msgq_receive_timedms(sub_buf_p->msgs, (unsigned char *) &sub_msg, timeoutms);
+        timeoutms = task_getremainingtimeoutms();
+        if (r == UBIK_ERR__TIMEOUT)
+        {
+            esp_err = ESP8266AT_ERR_TIMEOUT;
+            break;
+        }
+        assert(r == 0);
+
+        if (sub_msg > max_length)
+        {
+            len = max_length;
+            ubi_err = cbuf_read(sub_buf_p->data_buf, buffer, len, &read_tmp);
+            assert(ubi_err == UBI_ERR_OK);
+            ubi_err = cbuf_read(sub_buf_p->data_buf, NULL, sub_msg - len, NULL);
+            assert(ubi_err == UBI_ERR_OK);
+            esp_err = ESP8266AT_ERR_IO_OVERFLOW;
+        }
+        else
+        {
+            len = sub_msg;
+            ubi_err = cbuf_read(sub_buf_p->data_buf, buffer, len, &read_tmp);
+            assert(ubi_err == UBI_ERR_OK);
+            esp_err = ESP8266AT_ERR_OK;
+        }
+
+        
+        break;
+    } while (1);
+
+    if (received)
+    {
+        *received = read_tmp;
+    }
+
+    if (remain_timeoutms)
+    {
+        *remain_timeoutms = timeoutms;
+    }
+
+    mutex_unlock(sub_buf_p->data_mutex);
+
+    return esp_err;
 }
 
 #endif /* (INCLUDE__ESP8266AT == 1) */

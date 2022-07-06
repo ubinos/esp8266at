@@ -809,6 +809,17 @@ int esp8266at_cli_at_mqtt(esp8266at_t *esp8266at, char *str, int len, void *arg)
             break;
         }
 
+        cmd = "unsub ";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            tmpstr = &tmpstr[cmdlen];
+            tmplen -= cmdlen;
+
+            r = esp8266at_cli_at_mqtt_unsub(esp8266at, tmpstr, tmplen, arg);
+            break;
+        }
+
         cmd = "sublist";
         cmdlen = strlen(cmd);
         if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
@@ -817,6 +828,18 @@ int esp8266at_cli_at_mqtt(esp8266at_t *esp8266at, char *str, int len, void *arg)
             tmplen -= cmdlen;
 
             r = esp8266at_cli_at_mqtt_sublist(esp8266at, tmpstr, tmplen, arg);
+            break;
+        }
+
+
+        cmd = "subget ";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            tmpstr = &tmpstr[cmdlen];
+            tmplen -= cmdlen;
+
+            r = esp8266at_cli_at_mqtt_subget(esp8266at, tmpstr, tmplen, arg);
             break;
         }
 
@@ -885,7 +908,6 @@ int esp8266at_cli_at_mqtt_pub(esp8266at_t *esp8266at, char *str, int len, void *
     } while (1);
 
     return r;
-
 }
 
 int esp8266at_cli_at_mqtt_sub(esp8266at_t *esp8266at, char *str, int len, void *arg)
@@ -893,12 +915,13 @@ int esp8266at_cli_at_mqtt_sub(esp8266at_t *esp8266at, char *str, int len, void *
     int r = -1;
     esp8266at_err_t err;
     char topic[128];
+    uint32_t id;
     uint32_t qos;
 
     do
     {
-        sscanf(str, "%s %lu", topic, &qos);
-        err = esp8266at_cmd_at_mqttsub(esp8266at, topic, qos, _timeoutms, NULL);
+        sscanf(str, "%lu %s %lu", &id, topic, &qos);
+        err = esp8266at_cmd_at_mqttsub(esp8266at, id, topic, qos, _timeoutms, NULL);
         printf("result : err = %d\n", err);
         r = 0;
 
@@ -906,7 +929,25 @@ int esp8266at_cli_at_mqtt_sub(esp8266at_t *esp8266at, char *str, int len, void *
     } while (1);
 
     return r;
+}
 
+int esp8266at_cli_at_mqtt_unsub(esp8266at_t *esp8266at, char *str, int len, void *arg)
+{
+    int r = -1;
+    esp8266at_err_t err;
+    uint32_t id;
+
+    do
+    {
+        sscanf(str, "%lu", &id);
+        err = esp8266at_cmd_at_mqttunsub(esp8266at, id, _timeoutms, NULL);
+        printf("result : err = %d\n", err);
+        r = 0;
+
+        break;
+    } while (1);
+
+    return r;
 }
 
 int esp8266at_cli_at_mqtt_sublist(esp8266at_t *esp8266at, char *str, int len, void *arg)
@@ -927,7 +968,33 @@ int esp8266at_cli_at_mqtt_sublist(esp8266at_t *esp8266at, char *str, int len, vo
     } while (1);
 
     return r;
+}
 
+int esp8266at_cli_at_mqtt_subget(esp8266at_t *esp8266at, char *str, int len, void *arg)
+{
+    int r = -1;
+
+    esp8266at_err_t err;
+    uint32_t max_len;
+    uint32_t read = 0;
+    uint32_t id = 0;
+
+    do
+    {
+        sscanf(str, "%lu %lu", &id, &max_len);
+        err = esp8266at_cmd_at_mqttsubget(esp8266at, id, _recv_buf, max_len, &read, _timeoutms, NULL);
+        _recv_buf[read] = 0;
+
+        break;
+    } while (1);
+
+    printf("\"%s\"\n", (char*) _recv_buf);
+
+    printf("result : err = %d\n", err);
+
+    r = 0;
+
+    return r;
 }
 
 int esp8266at_cli_rdate(esp8266at_t *esp8266at, char *str, int len, void *arg)

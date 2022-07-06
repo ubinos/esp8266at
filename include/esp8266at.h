@@ -76,10 +76,13 @@ esp8266at_err_t esp8266at_cmd_at_mqttclean(esp8266at_t *esp8266at, uint32_t time
 
 esp8266at_err_t esp8266at_cmd_at_mqttpub(esp8266at_t *esp8266at, char *topic, char *data, uint32_t qos, uint32_t retain, uint32_t timeoutms, uint32_t *remain_timeoutms);
 
-esp8266at_err_t esp8266at_cmd_at_mqttsub(esp8266at_t *esp8266at, char *topic, uint32_t qos, uint32_t timeoutms, uint32_t *remain_timeoutms);
+esp8266at_err_t esp8266at_cmd_at_mqttsub(esp8266at_t *esp8266at, uint32_t id, char *topic, uint32_t qos, uint32_t timeoutms, uint32_t *remain_timeoutms);
 
 esp8266at_err_t esp8266at_cmd_at_mqttsub_q(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms);
 
+esp8266at_err_t esp8266at_cmd_at_mqttunsub(esp8266at_t *esp8266at, uint32_t id, uint32_t timeoutms, uint32_t *remain_timeoutms);
+
+esp8266at_err_t esp8266at_cmd_at_mqttsubget(esp8266at_t *esp8266at, uint32_t id, uint8_t *buffer, uint32_t max_length, uint32_t *received, uint32_t timeoutms, uint32_t *remain_timeoutms);
 
 #ifdef __cplusplus
 }

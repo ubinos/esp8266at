@@ -33,9 +33,13 @@ void esp8266_uart_rx_callback(void)
     int need_signal = 0;
     uint8_t *buf;
     uint32_t len;
+    uint32_t written;
     cbuf_pt rbuf;
     sem_pt rsem;
+    msgq_pt rmsgq;
     char len_end;
+    unsigned int msg_count;
+    esp8266at_mqtt_sub_buf_msg_t msg;
 
     len = ESP8266AT_IO_TEMP_RX_BUF_SIZE;
     buf = _g_esp8266at.io_temp_rx_buf;
@@ -75,6 +79,7 @@ void esp8266_uart_rx_callback(void)
         {
             _g_esp8266at.io_is_mqtt = 1;
             _g_esp8266at.io_mqtt_topic_i = 0;
+            _g_esp8266at.io_mqtt_sub_buf_id = -1;
             _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_MQTT_TOPIC;
             break;
         }
@@ -105,7 +110,28 @@ void esp8266_uart_rx_callback(void)
 
         if (',' == buf[0])
         {
-            _g_esp8266at.io_mqtt_topic_buf[_g_esp8266at.io_mqtt_topic_i] = 0;
+            if (_g_esp8266at.io_mqtt_topic_i > 0 && _g_esp8266at.io_mqtt_topic_buf[_g_esp8266at.io_mqtt_topic_i - 1] == '"')
+            {
+                 // ignore last "
+                _g_esp8266at.io_mqtt_topic_buf[_g_esp8266at.io_mqtt_topic_i - 1] = 0;
+            }
+            else 
+            {
+                _g_esp8266at.io_mqtt_topic_buf[_g_esp8266at.io_mqtt_topic_i] = 0;
+            }
+
+            for (int i = 0; i < ESP8266AT_IO_MQTT_SUB_BUF_MAX; i++)
+            {
+                if (strncmp((char *) _g_esp8266at.io_mqtt_topic_buf, _g_esp8266at.mqtt_sub_bufs[i].topic, ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX) == 0)
+                {
+                    msgq_getcount(_g_esp8266at.mqtt_sub_bufs[i].msgs, &msg_count);
+                    if (msg_count < ESP8266AT_IO_MQTT_SUB_BUF_MSG_MAX)
+                    {
+                        _g_esp8266at.io_mqtt_sub_buf_id = i;
+                    }
+                    break;
+                }
+            }
 
             _g_esp8266at.io_data_len = 0;
             _g_esp8266at.io_data_len_i = 0;
@@ -113,7 +139,7 @@ void esp8266_uart_rx_callback(void)
             break;
         }
 
-        if (_g_esp8266at.io_mqtt_topic_i >= ESP8266AT_IO_MQTT_TOPIC_BUF_SIZE - 1)
+        if (_g_esp8266at.io_mqtt_topic_i >= ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX - 1)
         {
             _g_esp8266at.io_data_key_i = 0;
             _g_esp8266at.io_mqtt_key_i = 0;
@@ -121,7 +147,11 @@ void esp8266_uart_rx_callback(void)
             break;
         }
 
-        if ('"' != buf[0])
+        if (_g_esp8266at.io_mqtt_topic_i == 0 && buf[0] == '"')
+        {
+             // ignore first "
+        }
+        else
         {
             _g_esp8266at.io_mqtt_topic_buf[_g_esp8266at.io_mqtt_topic_i] = buf[0];
             _g_esp8266at.io_mqtt_topic_i++;
@@ -173,40 +203,91 @@ void esp8266_uart_rx_callback(void)
         break;
 
     case ESP8266AT_IO_RX_MODE_DATA:
-        rbuf = _g_esp8266at.io_data_buf;
-        rsem = _g_esp8266at.io_data_read_sem;
-
-        _g_esp8266at.io_data_read += len;
-
-        if (cbuf_is_full(rbuf))
+        if (_g_esp8266at.io_is_mqtt)
         {
-            _g_esp8266at.rx_overflow_count++;
+            if (_g_esp8266at.io_mqtt_sub_buf_id >= 0)
+            {
+                rmsgq = _g_esp8266at.mqtt_sub_bufs[_g_esp8266at.io_mqtt_sub_buf_id].msgs;
+                rbuf = _g_esp8266at.mqtt_sub_bufs[_g_esp8266at.io_mqtt_sub_buf_id].data_buf;
+            }
+            else
+            {
+                rmsgq = NULL;
+                rbuf = NULL;
+            }
 
+            _g_esp8266at.io_data_read += len;
+
+            if (_g_esp8266at.io_mqtt_sub_buf_id >= 0)
+            {
+                if (cbuf_is_full(rbuf))
+                {
+                    _g_esp8266at.rx_overflow_count++;
+
+                    if (_g_esp8266at.io_data_read >= _g_esp8266at.io_data_len)
+                    {
+                        msg = _g_esp8266at.io_data_read - len;
+                        msgq_send(rmsgq, (unsigned char *) &msg);
+
+                        _g_esp8266at.io_data_key_i = 0;
+                        _g_esp8266at.io_mqtt_key_i = 0;
+                        _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
+                    }
+                    break;
+                }
+
+                cbuf_write(rbuf, buf, len, &written);
+            }
+
+            if (_g_esp8266at.io_data_read >= _g_esp8266at.io_data_len)
+            {
+                if (_g_esp8266at.io_mqtt_sub_buf_id >= 0)
+                {
+                    msg = _g_esp8266at.io_data_read - len + written;
+                    msgq_send(rmsgq, (unsigned char *) &msg);
+                }
+                _g_esp8266at.io_data_key_i = 0;
+                _g_esp8266at.io_mqtt_key_i = 0;
+                _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
+            }
+        }
+        else
+        {
+            rbuf = _g_esp8266at.io_data_buf;
+            rsem = _g_esp8266at.io_data_read_sem;
+
+            _g_esp8266at.io_data_read += len;
+
+            if (cbuf_is_full(rbuf))
+            {
+                _g_esp8266at.rx_overflow_count++;
+
+                if (_g_esp8266at.io_data_read >= _g_esp8266at.io_data_len)
+                {
+                    _g_esp8266at.io_data_key_i = 0;
+                    _g_esp8266at.io_mqtt_key_i = 0;
+                    _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
+                }
+                break;
+            }
+
+            if (cbuf_get_len(rbuf) == 0)
+            {
+                need_signal = 1;
+            }
+
+            cbuf_write(rbuf, buf, len, NULL);
+
+            if (need_signal && _bsp_kernel_active)
+            {
+                sem_give(rsem);
+            }
             if (_g_esp8266at.io_data_read >= _g_esp8266at.io_data_len)
             {
                 _g_esp8266at.io_data_key_i = 0;
                 _g_esp8266at.io_mqtt_key_i = 0;
                 _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
             }
-            break;
-        }
-
-        if (cbuf_get_len(rbuf) == 0)
-        {
-            need_signal = 1;
-        }
-
-        cbuf_write(rbuf, buf, len, NULL);
-
-        if (need_signal && _bsp_kernel_active)
-        {
-            sem_give(rsem);
-        }
-        if (_g_esp8266at.io_data_read >= _g_esp8266at.io_data_len)
-        {
-            _g_esp8266at.io_data_key_i = 0;
-            _g_esp8266at.io_mqtt_key_i = 0;
-            _g_esp8266at.io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
         }
 
         break;
