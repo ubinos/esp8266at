@@ -179,7 +179,22 @@ static void clihelphookfunc()
     printf("    <tz> : timezone (-12 to 14)\n");
     printf("    <server> : sntp server address\n");
     printf("    example: : at c sntp 1 9 time.google.com\n");
+#if (ESP8266AT__USE_WIZFI360_API == 1)
     printf("at c mqtt <client_id> <username> <passwd>       : Set MQTT connection information\n");
+#else
+    printf("at c mqtt <mqtt_scheme> <client_id> <username> <passwd> : Set MQTT connection information\n");
+    printf("    <mqtt_scheme> :\n");
+    printf("        1 : MQTT over TCP\n");
+    // printf("        2 : MQTT over TLS (no certificate verify)\n");
+    // printf("        3 : MQTT over TLS (verify server certificate)\n");
+    // printf("        4 : MQTT over TLS (provide client certificate)\n");
+    // printf("        5 : MQTT over TLS (verify server certificate and provide client certificate)\n");
+    // printf("        6 : MQTT over WebSocket (based on TCP)\n");
+    // printf("        7 : MQTT over WebSocket Secure (based on TLS, no certificate verify)\n");
+    // printf("        8 : MQTT over WebSocket Secure (based on TLS, verify server certificate)\n");
+    // printf("        9 : MQTT over WebSocket Secure (based on TLS, provide client certificate)\n");
+    // printf("        10: MQTT over WebSocket Secure (based on TLS, verify server certificate and provide client certificate)\n");
+#endif /* (ESP8266AT__USE_WIZFI360_API == 1) */
     printf("\n");
     printf("at ap join                                      : Join to an AP\n");
     printf("at ap quit                                      : Quit from the AP\n");
@@ -192,6 +207,13 @@ static void clihelphookfunc()
     printf("at conn send <data>                             : Send data\n");
     printf("at conn recv <len>                              : Receive data\n");
     printf("\n");
+#if (ESP8266AT__USE_WIZFI360_API == 1)
+    printf("at mqtt topic <pub_topic> <sub_topic>( <sub_topic_2>( <sub_topic_3>))  : Set MQTT topics\n");
+    printf("    mqtt message must contain header (+MQTTSUBRECV:0,\"<topic>\",<data_len>,<data>)");
+    printf("at mqtt open <ip> <port>                        : Open MQTT connection\n");
+    printf("at mqtt close                                   : Close MQTT connection\n");
+    printf("at mqtt pub <data>                              : Publish MQTT messages\n");
+#else
     printf("at mqtt open <ip> <port> <reconnect>            : Open MQTT connection\n");
     printf("    <reconnect> :\n");
     printf("        0 : MQTT will not reconnect automatically.\n");
@@ -212,6 +234,7 @@ static void clihelphookfunc()
     printf("        2 : Exactly once\n");
     printf("at mqtt unsub <id>                              : Unsubscribe\n");
     printf("at mqtt sublist                                 : List all MQTT topics that have been already subscribed\n");
+#endif /* (ESP8266AT__USE_WIZFI360_API == 1) */
     printf("at mqtt subget <id> <max_len>                   : Get subscribed data\n");
     printf("\n");
     printf("rdate                                           : sync system time with NSTP time\n");

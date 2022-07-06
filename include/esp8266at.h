@@ -70,6 +70,11 @@ esp8266at_err_t esp8266at_cmd_at_cipsntptime(esp8266at_t *esp8266at, struct tm *
 
 esp8266at_err_t esp8266at_cmd_at_mqttusercfg(esp8266at_t *esp8266at, uint8_t mqtt_scheme, char * mqtt_client_id, char * mqtt_username, char * mqtt_passwd, uint32_t timeoutms, uint32_t *remain_timeoutms);
 
+#if (ESP8266AT__USE_WIZFI360_API == 1)
+esp8266at_err_t esp8266at_cmd_at_mqtttopic(esp8266at_t *esp8266at, char *pub_topic, char *sub_topic, char *sub_topic_2, char *sub_topic_3, uint32_t timeoutms, uint32_t *remain_timeoutms);
+#else
+#endif /* (ESP8266AT__USE_WIZFI360_API == 1) */
+
 esp8266at_err_t esp8266at_cmd_at_mqttconn(esp8266at_t *esp8266at, char *ip, uint32_t port, uint32_t reconnect, uint32_t timeoutms, uint32_t *remain_timeoutms);
 
 esp8266at_err_t esp8266at_cmd_at_mqttclean(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms);

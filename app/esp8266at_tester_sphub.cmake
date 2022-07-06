@@ -27,6 +27,8 @@ set_cache(UBINOS__BSP__BOARD_VARIATION_NAME "SPHUB" STRING)
 set_cache(ESP8266AT__USE_RESET_PIN TRUE BOOL)
 set_cache(ESP8266AT__USE_CHIPSELECT_PIN TRUE BOOL)
 
+set_cache(ESP8266AT__USE_WIZFI360_API TRUE BOOL)
+
 include(${PROJECT_UBINOS_DIR}/config/ubinos_nrf52840dk.cmake)
 include(${PROJECT_LIBRARY_DIR}/seggerrtt_wrapper/config/seggerrtt.cmake)
 include(${PROJECT_LIBRARY_DIR}/nrf5sdk_wrapper/config/nrf5sdk.cmake)

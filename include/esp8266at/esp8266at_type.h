@@ -65,7 +65,7 @@ extern "C"
 
 #define ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX 128
 #define ESP8266AT_IO_MQTT_SUB_DATA_BUF_SIZE 1024
-#define ESP8266AT_IO_MQTT_SUB_BUF_MAX 3
+#define ESP8266AT_IO_MQTT_SUB_BUF_MAX 3 // It must be greater or equal 3
 #define ESP8266AT_IO_MQTT_SUB_BUF_MSG_MAX 5
 
 typedef enum
@@ -132,6 +132,8 @@ typedef struct _esp8266at_t
 
     char ssid[ESP8266AT_SSID_LENGTH_MAX];
     char passwd[ESP8266AT_PASSWD_LENGTH_MAX];
+
+    uint8_t mux_mode;
 
     uint8_t dns_enable;
     char dns_server_addr[ESP8266AT_DNS_SERVER_MAX][ESP8266AT_DNS_SERVER_ADDR_LENGTH_MAX];

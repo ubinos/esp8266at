@@ -10,3 +10,4 @@ set(PROJECT_UBINOS_LIBRARIES ${PROJECT_UBINOS_LIBRARIES} esp8266at)
 set_cache_default(ESP8266AT__USE_RESET_PIN FALSE BOOL "Use reset pin")
 set_cache_default(ESP8266AT__USE_CHIPSELECT_PIN TRUE BOOL "Use chip select pin")
 
+set_cache_default(ESP8266AT__USE_WIZFI360_API FALSE BOOL "Use WizFi360 API")

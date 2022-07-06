@@ -54,6 +54,10 @@ int esp8266at_cli_at_conn_send(esp8266at_t *esp8266at, char *str, int len, void 
 int esp8266at_cli_at_conn_recv(esp8266at_t *esp8266at, char *str, int len, void *arg);
 
 int esp8266at_cli_at_mqtt(esp8266at_t *esp8266at, char *str, int len, void *arg);
+#if (ESP8266AT__USE_WIZFI360_API == 1)
+int esp8266at_cli_at_mqtt_topic(esp8266at_t *esp8266at, char *str, int len, void *arg);
+#else
+#endif /* (ESP8266AT__USE_WIZFI360_API == 1) */
 int esp8266at_cli_at_mqtt_open(esp8266at_t *esp8266at, char *str, int len, void *arg);
 int esp8266at_cli_at_mqtt_close(esp8266at_t *esp8266at, char *str, int len, void *arg);
 int esp8266at_cli_at_mqtt_pub(esp8266at_t *esp8266at, char *str, int len, void *arg);

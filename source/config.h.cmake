@@ -8,6 +8,8 @@
 #cmakedefine01 ESP8266AT__USE_RESET_PIN
 #cmakedefine01 ESP8266AT__USE_CHIPSELECT_PIN
 
+#cmakedefine01 ESP8266AT__USE_WIZFI360_API
+
 #endif /* (INCLUDE__ESP8266AT == 1) */
 
 

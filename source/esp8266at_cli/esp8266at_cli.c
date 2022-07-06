@@ -481,9 +481,15 @@ int esp8266at_cli_at_config_mqttusercfg(esp8266at_t *esp8266at, char *str, int l
         memset(esp8266at->mqtt_username, 0, ESP8266AT_MQTT_USERNAME_LENGTH_MAX);
         memset(esp8266at->mqtt_passwd, 0, ESP8266AT_MQTT_PASSWD_LENGTH_MAX);
 
+#if (ESP8266AT__USE_WIZFI360_API == 1)
+        sscanf(str, "%s %s %s",
+            esp8266at->mqtt_client_id, esp8266at->mqtt_username, esp8266at->mqtt_passwd);
+        esp8266at->mqtt_scheme = mqtt_scheme;
+#else
         sscanf(str, "%d %s %s %s", &mqtt_scheme,
             esp8266at->mqtt_client_id, esp8266at->mqtt_username, esp8266at->mqtt_passwd);
         esp8266at->mqtt_scheme = mqtt_scheme;
+#endif /* (ESP8266AT__USE_WIZFI360_API == 1) */
 
         r = esp8266at_cmd_at_mqttusercfg(esp8266at, mqtt_scheme,
             esp8266at->mqtt_client_id, esp8266at->mqtt_username, esp8266at->mqtt_passwd,
@@ -765,6 +771,21 @@ int esp8266at_cli_at_mqtt(esp8266at_t *esp8266at, char *str, int len, void *arg)
 
     do
     {
+
+#if (ESP8266AT__USE_WIZFI360_API == 1)
+        cmd = "topic ";
+        cmdlen = strlen(cmd);
+        if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
+        {
+            tmpstr = &tmpstr[cmdlen];
+            tmplen -= cmdlen;
+
+            r = esp8266at_cli_at_mqtt_topic(esp8266at, tmpstr, tmplen, arg);
+            break;
+        }
+#else
+#endif /* (ESP8266AT__USE_WIZFI360_API == 1) */
+
         cmd = "open ";
         cmdlen = strlen(cmd);
         if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
@@ -849,6 +870,37 @@ int esp8266at_cli_at_mqtt(esp8266at_t *esp8266at, char *str, int len, void *arg)
     return r;
 }
 
+#if (ESP8266AT__USE_WIZFI360_API == 1)
+int esp8266at_cli_at_mqtt_topic(esp8266at_t *esp8266at, char *str, int len, void *arg)
+{
+    int r = -1;
+
+    esp8266at_err_t err;
+    char pub_topic[128];
+    char sub_topic[128];
+    char sub_topic_2[128];
+    char sub_topic_3[128];
+
+    memset(pub_topic, 0, sizeof(pub_topic));
+    memset(sub_topic, 0, sizeof(sub_topic));
+    memset(sub_topic_2, 0, sizeof(sub_topic_2));
+    memset(sub_topic_3, 0, sizeof(sub_topic_3));
+
+    do
+    {
+        sscanf(str, "%s %s %s %s", pub_topic, sub_topic, sub_topic_2, sub_topic_3);
+        err = esp8266at_cmd_at_mqtttopic(esp8266at, pub_topic, sub_topic, sub_topic_2, sub_topic_3, _timeoutms, NULL);
+        printf("result : err = %d\n", err);
+        r = 0;
+
+        break;
+    } while (1);
+
+    return r;
+}
+#else
+#endif /* (ESP8266AT__USE_WIZFI360_API == 1) */
+
 int esp8266at_cli_at_mqtt_open(esp8266at_t *esp8266at, char *str, int len, void *arg)
 {
     int r = -1;
@@ -894,12 +946,16 @@ int esp8266at_cli_at_mqtt_pub(esp8266at_t *esp8266at, char *str, int len, void *
     esp8266at_err_t err;
     char topic[128];
     char data[128];
-    uint32_t qos;
-    uint32_t retain;
+    uint32_t qos = 0;
+    uint32_t retain = 0;
 
     do
     {
+#if (ESP8266AT__USE_WIZFI360_API == 1)
+        sscanf(str, "%s", data);
+#else
         sscanf(str, "%s %s %lu %lu", topic, data, &qos, &retain);
+#endif /* (ESP8266AT__USE_WIZFI360_API == 1) */
         err = esp8266at_cmd_at_mqttpub(esp8266at, topic, data, qos, retain, _timeoutms, NULL);
         printf("result : err = %d\n", err);
         r = 0;
