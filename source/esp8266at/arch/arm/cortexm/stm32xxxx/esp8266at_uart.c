@@ -5,7 +5,6 @@
  */
 
 #include <ubinos.h>
-#include <ubinos/bsp/arch.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -16,6 +15,8 @@
 #if (INCLUDE__UBINOS__UBIK != 1)
 	#error "ubik is necessary"
 #endif
+
+#include <ubinos/bsp/arch.h>
 
 #include <assert.h>
 
