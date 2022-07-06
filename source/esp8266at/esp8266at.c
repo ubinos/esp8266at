@@ -21,8 +21,10 @@
 
 #if (UBINOS__BSP__BOARD_VARIATION__SPHUB == 1)
     #define _CIPDNS_STRING "CIPDNS_CUR"
+    #define _CWJAP_STRING "CWJAP_CUR"
 #else
     #define _CIPDNS_STRING "CIPDNS"
+    #define _CWJAP_STRING "CWJAP"
 #endif /* (UBINOS__BSP__BOARD_VARIATION__SPHUB == 1) */
 
 static esp8266at_err_t _wait_rsp(esp8266at_t *esp8266at, char *rsp, uint8_t *buffer, uint32_t length, uint32_t *received, uint32_t timeoutms,
@@ -613,7 +615,7 @@ esp8266at_err_t esp8266at_cmd_at_cwjap(esp8266at_t *esp8266at, char *ssid, char 
         return ESP8266AT_ERR_TIMEOUT;
     }
 
-    sprintf(esp8266at->temp_cmd_buf, "AT+CWJAP=\"%s\",\"%s\"\r\n", ssid, passwd);
+    sprintf(esp8266at->temp_cmd_buf, "AT+"_CWJAP_STRING"=\"%s\",\"%s\"\r\n", ssid, passwd);
     err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->temp_cmd_buf, "OK\r\n", timeoutms, &timeoutms);
 
     if (remain_timeoutms)
@@ -1338,7 +1340,6 @@ esp8266at_err_t esp8266at_cmd_at_mqttusercfg(esp8266at_t *esp8266at, uint8_t mqt
 {
     int r;
     esp8266at_err_t err;
-    char *ptr1;
 
     if (mqtt_client_id == NULL || mqtt_username == NULL || mqtt_username == NULL)
     {
@@ -1352,22 +1353,8 @@ esp8266at_err_t esp8266at_cmd_at_mqttusercfg(esp8266at_t *esp8266at, uint8_t mqt
         return ESP8266AT_ERR_TIMEOUT;
     }
 
-    sprintf(esp8266at->temp_cmd_buf, "AT+MQTTUSERCFG=0,%d", mqtt_scheme);
-    ptr1 = esp8266at->temp_cmd_buf + strlen(esp8266at->temp_cmd_buf);
-
-    sprintf(ptr1, ",\"%s\"", mqtt_client_id);
-    ptr1 += strlen(ptr1);
-
-    sprintf(ptr1, ",\"%s\"", mqtt_username);
-    ptr1 += strlen(ptr1);
-
-    sprintf(ptr1, ",\"%s\"", mqtt_passwd);
-    ptr1 += strlen(ptr1);
-
-    sprintf(ptr1, ",0,0,\"\"");
-    ptr1 += strlen(ptr1);
-
-    sprintf(ptr1, "\r\n");
+    sprintf(esp8266at->temp_cmd_buf, "AT+MQTTUSERCFG=0,%d,\"%s\",\"%s\",\"%s\",0,0,\"\"\r\n", 
+        mqtt_scheme, mqtt_client_id, mqtt_username, mqtt_passwd);
 
     err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->temp_cmd_buf, "OK\r\n", timeoutms, &timeoutms);
 
