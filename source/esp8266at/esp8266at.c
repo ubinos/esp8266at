@@ -17,7 +17,7 @@
 #include "esp8266at_io.h"
 
 #undef LOGM_CATEGORY
-#define LOGM_CATEGORY LOGM_CATEGORY__USER00
+#define LOGM_CATEGORY ESP8266AT__LOGM_CATEGORY
 
 #if (ESP8266AT__USE_WIZFI360_API == 1)
     #define _CIPDNS_STRING "CIPDNS_CUR"
@@ -614,11 +614,23 @@ esp8266at_err_t esp8266at_cmd_at_cwjap(esp8266at_t *esp8266at, char *ssid, char 
     int r;
     esp8266at_err_t err;
 
+    assert(ssid != NULL);
+    assert(passwd != NULL);
+
     r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
         return ESP8266AT_ERR_TIMEOUT;
+    }
+
+    if (esp8266at->ssid != ssid)
+    {
+        strncpy(esp8266at->ssid, ssid, ESP8266AT_SSID_LENGTH_MAX);
+    }
+    if (esp8266at->passwd != passwd)
+    {
+        strncpy(esp8266at->passwd, passwd, ESP8266AT_PASSWD_LENGTH_MAX);
     }
 
     sprintf(esp8266at->temp_cmd_buf, "AT+"_CWJAP_STRING"=\"%s\",\"%s\"\r\n", ssid, passwd);
@@ -736,6 +748,12 @@ esp8266at_err_t esp8266at_cmd_at_cifsr(esp8266at_t *esp8266at, uint32_t timeoutm
 
             break;
         } while (1);
+    }
+
+    if (err != ESP8266AT_ERR_OK)
+    {
+        memset(esp8266at->ip_addr, 0, ESP8266AT_IP_ADDR_LENGTH_MAX);
+        memset(esp8266at->mac_addr, 0, ESP8266AT_MAC_ADDR_LENGTH_MAX);
     }
 
     if (remain_timeoutms)
@@ -922,7 +940,11 @@ esp8266at_err_t esp8266at_cmd_at_ciprecv(esp8266at_t *esp8266at, uint8_t *buffer
                 esp_err = ESP8266AT_ERR_TIMEOUT;
                 break;
             }
-            assert(r == 0);
+            if (r != 0)
+            {
+                esp_err = ESP8266AT_ERR_ERROR;
+                break;
+            }
         }
     }
 
@@ -954,22 +976,36 @@ esp8266at_err_t esp8266at_cmd_at_cipdns(esp8266at_t *esp8266at, uint8_t enable, 
         return ESP8266AT_ERR_TIMEOUT;
     }
 
+    esp8266at->dns_enable = enable;
+
     sprintf(esp8266at->temp_cmd_buf, "AT+"_CIPDNS_STRING"=%d", enable);
     ptr1 = esp8266at->temp_cmd_buf + strlen(esp8266at->temp_cmd_buf);
     if (dns_server_addr != NULL && strlen(dns_server_addr) > 0)
     {
         sprintf(ptr1, ",\"%s\"", dns_server_addr);
         ptr1 += strlen(ptr1);
+        if (esp8266at->dns_server_addr[0] != dns_server_addr)
+        {
+            strncpy(esp8266at->dns_server_addr[0], dns_server_addr, ESP8266AT_DNS_SERVER_ADDR_LENGTH_MAX);
+        }
 
         if (dns_server_addr2 != NULL && strlen(dns_server_addr2) > 0)
         {
             sprintf(ptr1, ",\"%s\"", dns_server_addr2);
             ptr1 += strlen(ptr1);
+            if (esp8266at->dns_server_addr[1] != dns_server_addr2)
+            {
+                strncpy(esp8266at->dns_server_addr[1], dns_server_addr2, ESP8266AT_DNS_SERVER_ADDR_LENGTH_MAX);
+            }
 
             if (dns_server_addr3 != NULL && strlen(dns_server_addr3) > 0)
             {
                 sprintf(ptr1, ",\"%s\"", dns_server_addr3);
                 ptr1 += strlen(ptr1);
+                if (esp8266at->dns_server_addr[2] != dns_server_addr3)
+                {
+                    strncpy(esp8266at->dns_server_addr[2], dns_server_addr3, ESP8266AT_DNS_SERVER_ADDR_LENGTH_MAX);
+                }
             }
         }
     }
@@ -1075,22 +1111,37 @@ esp8266at_err_t esp8266at_cmd_at_cipsntpcfg(esp8266at_t *esp8266at, uint8_t enab
         return ESP8266AT_ERR_TIMEOUT;
     }
 
+    esp8266at->sntp_enable = enable;
+    esp8266at->sntp_timezone = timezone;
+
     sprintf(esp8266at->temp_cmd_buf, "AT+CIPSNTPCFG=%d,%d", enable, timezone);
     ptr1 = esp8266at->temp_cmd_buf + strlen(esp8266at->temp_cmd_buf);
     if (sntp_server_addr != NULL && strlen(sntp_server_addr) > 0)
     {
         sprintf(ptr1, ",\"%s\"", sntp_server_addr);
         ptr1 += strlen(ptr1);
+        if (esp8266at->sntp_server_addr[0] != sntp_server_addr)
+        {
+            strncpy(esp8266at->sntp_server_addr[0], sntp_server_addr, ESP8266AT_SNTP_SERVER_ADDR_LENGTH_MAX);
+        }
 
         if (sntp_server_addr2 != NULL && strlen(sntp_server_addr2) > 0)
         {
             sprintf(ptr1, ",\"%s\"", sntp_server_addr2);
             ptr1 += strlen(ptr1);
+            if (esp8266at->sntp_server_addr[1] != sntp_server_addr2)
+            {
+                strncpy(esp8266at->sntp_server_addr[1], sntp_server_addr2, ESP8266AT_SNTP_SERVER_ADDR_LENGTH_MAX);
+            }
 
             if (sntp_server_addr3 != NULL && strlen(sntp_server_addr3) > 0)
             {
                 sprintf(ptr1, ",\"%s\"", sntp_server_addr3);
                 ptr1 += strlen(ptr1);
+                if (esp8266at->sntp_server_addr[2] != sntp_server_addr3)
+                {
+                    strncpy(esp8266at->sntp_server_addr[2], sntp_server_addr3, ESP8266AT_SNTP_SERVER_ADDR_LENGTH_MAX);
+                }
             }
         }
     }
@@ -1357,6 +1408,20 @@ esp8266at_err_t esp8266at_cmd_at_mqttusercfg(esp8266at_t *esp8266at, uint8_t mqt
     if (r == UBIK_ERR__TIMEOUT)
     {
         return ESP8266AT_ERR_TIMEOUT;
+    }
+
+    esp8266at->mqtt_scheme = mqtt_scheme;
+    if (esp8266at->mqtt_client_id != mqtt_client_id)
+    {
+        strncpy(esp8266at->mqtt_client_id, mqtt_client_id, ESP8266AT_MQTT_CLIENT_ID_LENGTH_MAX);
+    }
+    if (esp8266at->mqtt_username != mqtt_username)
+    {
+        strncpy(esp8266at->mqtt_username, mqtt_username, ESP8266AT_MQTT_USERNAME_LENGTH_MAX);
+    }
+    if (esp8266at->mqtt_passwd != mqtt_passwd)
+    {
+        strncpy(esp8266at->mqtt_passwd, mqtt_passwd, ESP8266AT_MQTT_PASSWD_LENGTH_MAX);
     }
 
 #if (ESP8266AT__USE_WIZFI360_API == 1)
@@ -1656,7 +1721,11 @@ esp8266at_err_t esp8266at_cmd_at_mqttsubget(esp8266at_t *esp8266at, uint32_t id,
             esp_err = ESP8266AT_ERR_TIMEOUT;
             break;
         }
-        assert(r == 0);
+        if (r != 0)
+        {
+            esp_err = ESP8266AT_ERR_ERROR;
+            break;
+        }
 
         if (sub_msg > max_length)
         {
@@ -1675,7 +1744,6 @@ esp8266at_err_t esp8266at_cmd_at_mqttsubget(esp8266at_t *esp8266at, uint32_t id,
             esp_err = ESP8266AT_ERR_OK;
         }
 
-        
         break;
     } while (1);
 

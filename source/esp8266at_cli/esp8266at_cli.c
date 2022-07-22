@@ -20,7 +20,7 @@
 #include "../../source/esp8266at/esp8266at_io.h"
 
 #undef LOGM_CATEGORY
-#define LOGM_CATEGORY LOGM_CATEGORY__USER00
+#define LOGM_CATEGORY ESP8266AT__LOGM_CATEGORY
 
 #define ESP8266AT_RECV_BUFFER_SIZE 1500
 
@@ -412,6 +412,7 @@ int esp8266at_cli_at_config_ap(esp8266at_t *esp8266at, char *str, int len, void 
     do
     {
         sscanf(str, "%s %s", esp8266at->ssid, esp8266at->passwd);
+        printf("result : err = %d\n", 0);
         r = 0;
 
         break;
@@ -424,17 +425,16 @@ int esp8266at_cli_at_config_dns(esp8266at_t *esp8266at, char *str, int len, void
 {
     int r = -1;
     int enable = 0;
+    char dns_server_addr[3][ESP8266AT_DNS_SERVER_ADDR_LENGTH_MAX];
 
     do
     {
-        esp8266at->dns_enable = 0;
-        memset(esp8266at->dns_server_addr, 0, ESP8266AT_DNS_SERVER_MAX * ESP8266AT_DNS_SERVER_ADDR_LENGTH_MAX);
+        memset(dns_server_addr, 0, 3 * ESP8266AT_DNS_SERVER_ADDR_LENGTH_MAX);
         sscanf(str, "%d %s %s %s", &enable,
-            esp8266at->dns_server_addr[0], esp8266at->dns_server_addr[1], esp8266at->dns_server_addr[2]);
-        esp8266at->dns_enable = enable;
+            dns_server_addr[0], dns_server_addr[1], dns_server_addr[2]);
 
         r = esp8266at_cmd_at_cipdns(esp8266at, enable,
-            esp8266at->dns_server_addr[0], esp8266at->dns_server_addr[1], esp8266at->dns_server_addr[2],
+            dns_server_addr[0], dns_server_addr[1], dns_server_addr[2],
             _timeoutms, NULL);
 
         break;
@@ -448,19 +448,16 @@ int esp8266at_cli_at_config_sntpcfg(esp8266at_t *esp8266at, char *str, int len, 
     int r = -1;
     int enable = 0;
     int timezone = 0;
+    char sntp_server_addr[3][ESP8266AT_SNTP_SERVER_ADDR_LENGTH_MAX];
 
     do
     {
-        esp8266at->sntp_enable = 0;
-        esp8266at->sntp_timezone = 0;
-        memset(esp8266at->sntp_server_addr, 0, ESP8266AT_SNTP_SERVER_MAX * ESP8266AT_SNTP_SERVER_ADDR_LENGTH_MAX);
+        memset(sntp_server_addr, 0, 3 * ESP8266AT_SNTP_SERVER_ADDR_LENGTH_MAX);
         sscanf(str, "%d %d %s %s %s", &enable, &timezone, 
-            esp8266at->sntp_server_addr[0], esp8266at->sntp_server_addr[1], esp8266at->sntp_server_addr[2]);
-        esp8266at->sntp_enable = enable;
-        esp8266at->sntp_timezone = timezone;
+            sntp_server_addr[0], sntp_server_addr[1], sntp_server_addr[2]);
 
         r = esp8266at_cmd_at_cipsntpcfg(esp8266at, enable, timezone,
-            esp8266at->sntp_server_addr[0], esp8266at->sntp_server_addr[1], esp8266at->sntp_server_addr[2],
+            sntp_server_addr[0], sntp_server_addr[1], sntp_server_addr[2],
             _timeoutms, NULL);
 
         break;
@@ -473,26 +470,26 @@ int esp8266at_cli_at_config_mqttusercfg(esp8266at_t *esp8266at, char *str, int l
 {
     int r = -1;
     int mqtt_scheme = 1;
+    char mqtt_client_id[ESP8266AT_MQTT_CLIENT_ID_LENGTH_MAX];
+    char mqtt_username[ESP8266AT_MQTT_USERNAME_LENGTH_MAX];
+    char mqtt_passwd[ESP8266AT_MQTT_PASSWD_LENGTH_MAX];
 
     do
     {
-        esp8266at->mqtt_scheme = 1;
-        memset(esp8266at->mqtt_client_id, 0, ESP8266AT_MQTT_CLIENT_ID_LENGTH_MAX);
-        memset(esp8266at->mqtt_username, 0, ESP8266AT_MQTT_USERNAME_LENGTH_MAX);
-        memset(esp8266at->mqtt_passwd, 0, ESP8266AT_MQTT_PASSWD_LENGTH_MAX);
+        memset(mqtt_client_id, 0, ESP8266AT_MQTT_CLIENT_ID_LENGTH_MAX);
+        memset(mqtt_username, 0, ESP8266AT_MQTT_USERNAME_LENGTH_MAX);
+        memset(mqtt_passwd, 0, ESP8266AT_MQTT_PASSWD_LENGTH_MAX);
 
 #if (ESP8266AT__USE_WIZFI360_API == 1)
         sscanf(str, "%s %s %s",
-            esp8266at->mqtt_client_id, esp8266at->mqtt_username, esp8266at->mqtt_passwd);
-        esp8266at->mqtt_scheme = mqtt_scheme;
+            mqtt_client_id, mqtt_username, mqtt_passwd);
 #else
         sscanf(str, "%d %s %s %s", &mqtt_scheme,
-            esp8266at->mqtt_client_id, esp8266at->mqtt_username, esp8266at->mqtt_passwd);
-        esp8266at->mqtt_scheme = mqtt_scheme;
+            mqtt_client_id, mqtt_username, mqtt_passwd);
 #endif /* (ESP8266AT__USE_WIZFI360_API == 1) */
 
         r = esp8266at_cmd_at_mqttusercfg(esp8266at, mqtt_scheme,
-            esp8266at->mqtt_client_id, esp8266at->mqtt_username, esp8266at->mqtt_passwd,
+            mqtt_client_id, mqtt_username, mqtt_passwd,
             _timeoutms, NULL);
 
         break;
@@ -602,8 +599,6 @@ int esp8266at_cli_at_ap_query_ip(esp8266at_t *esp8266at, char *str, int len, voi
     err = esp8266at_cmd_at_cifsr(esp8266at, _timeoutms, NULL);
     if (err != ESP8266AT_ERR_OK)
     {
-        memset(esp8266at->ip_addr, 0, ESP8266AT_IP_ADDR_LENGTH_MAX);
-        memset(esp8266at->mac_addr, 0, ESP8266AT_MAC_ADDR_LENGTH_MAX);
         r = -1;
     }
     printf("result : err = %d, ip_addr = %s, mac_addr = %s\n", err, esp8266at->ip_addr, esp8266at->mac_addr);
@@ -1142,10 +1137,6 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
             r = -1;
             break;
         }
-
-        printf("\n==== Config AP ====\n\n");
-        strncpy(esp8266at->ssid, ssid, ESP8266AT_SSID_LENGTH_MAX);
-        strncpy(esp8266at->passwd, passwd, ESP8266AT_PASSWD_LENGTH_MAX);
 
         printf("\n==== Join to an AP ====\n\n");
         err = esp8266at_cmd_at_cwjap(esp8266at, ssid, passwd, _timeoutms * 3, NULL);

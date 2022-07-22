@@ -53,7 +53,7 @@ static void rootfunc(void *arg)
     printf("================================================================================\n");
     printf("\n");
 
-    logm_setlevel(LOGM_CATEGORY__USER00, LOGM_LEVEL__DEBUG);
+    logm_setlevel(ESP8266AT__LOGM_CATEGORY, LOGM_LEVEL__DEBUG);
 
     r = cli_sethookfunc(clihookfunc, NULL);
     if (0 != r)
