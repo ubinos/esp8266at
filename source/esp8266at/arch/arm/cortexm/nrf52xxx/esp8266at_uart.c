@@ -380,10 +380,16 @@ static void esp8266at_uart_reset(void)
 
     config.pseltxd = ESP8266_UART_TX_Pin;
     config.pselrxd = ESP8266_UART_RX_Pin;
+#if (ESP8266AT__USE_UART_HW_FLOW_CONTROL == 1)
+    config.pselcts = ESP8266_CTX_Pin;
+    config.pselrts = ESP8266_RTS_Pin;
+    config.hwfc = NRF_UART_HWFC_ENABLED;
+#else
     config.pselcts = CTS_PIN_NUMBER;
     config.pselrts = RTS_PIN_NUMBER;
-    config.p_context = NULL;
     config.hwfc = NRF_UART_HWFC_DISABLED;
+#endif /* (ESP8266AT__USE_UART_HW_FLOW_CONTROL == 1) */
+    config.p_context = NULL;
     config.parity = NRF_UART_PARITY_EXCLUDED;
     config.baudrate = NRF_UART_BAUDRATE_115200;
     config.interrupt_priority = NVIC_PRIO_LOWEST;

@@ -949,10 +949,10 @@ int esp8266at_cli_at_mqtt_pub(esp8266at_t *esp8266at, char *str, int len, void *
     {
 #if (ESP8266AT__USE_WIZFI360_API == 1)
         sscanf(str, "%s", _mqtt_msg_buf);
-        err = esp8266at_cmd_at_mqttpub(esp8266at, topic, _mqtt_msg_buf, qos, retain, _timeoutms, NULL);
+        err = esp8266at_cmd_at_mqttpub(esp8266at, topic, (char *) _mqtt_msg_buf, qos, retain, _timeoutms, NULL);
 #else
         sscanf(str, "%s %s %lu %lu", topic, _mqtt_msg_buf, &qos, &retain);
-        err = esp8266at_cmd_at_mqttpubraw(esp8266at, topic, (char *)_mqtt_msg_buf, strlen((char *)_mqtt_msg_buf), qos, retain, _timeoutms, NULL);
+        err = esp8266at_cmd_at_mqttpubraw(esp8266at, topic, (char *) _mqtt_msg_buf, strlen((char *)_mqtt_msg_buf), qos, retain, _timeoutms, NULL);
 #endif /* (ESP8266AT__USE_WIZFI360_API == 1) */
         printf("result : err = %d\n", err);
         r = 0;

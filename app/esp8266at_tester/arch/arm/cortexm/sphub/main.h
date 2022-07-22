@@ -20,6 +20,10 @@ extern esp8266at_t _g_esp8266at;
 #if (ESP8266AT__USE_CHIPSELECT_PIN == 1)
     #define ESP8266_CS_Pin NRF_GPIO_PIN_MAP(1,1)
 #endif /* (ESP8266AT__USE_CHIPSELECT_PIN == 1) */
+#if (ESP8266AT__USE_UART_HW_FLOW_CONTROL == 1)
+    #define ESP8266_CTX_Pin NRF_GPIO_PIN_MAP(0,19)
+    #define ESP8266_RTS_Pin NRF_GPIO_PIN_MAP(0,20)
+#endif /* (ESP8266AT__USE_UART_HW_FLOW_CONTROL == 1) */
 
 #endif /* __MAIN_H */
 
