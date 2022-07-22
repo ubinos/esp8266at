@@ -1595,6 +1595,64 @@ esp8266at_err_t esp8266at_cmd_at_mqttpub(esp8266at_t *esp8266at, char *topic, ch
     return err;
 }
 
+esp8266at_err_t esp8266at_cmd_at_mqttpubraw(esp8266at_t *esp8266at, char *topic, char *data, uint32_t length, uint32_t qos, uint32_t retain, uint32_t timeoutms, uint32_t *remain_timeoutms)
+{
+    int r;
+    esp8266at_err_t err;
+    (void) r;
+
+#if (ESP8266AT__USE_WIZFI360_API == 1)
+    err = esp8266at_cmd_at_mqttpub(esp8266at, topic, data, qos, retain, timeoutms, remain_timeoutms);
+#else
+    r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
+    timeoutms = task_getremainingtimeoutms();
+    if (r == UBIK_ERR__TIMEOUT)
+    {
+        return ESP8266AT_ERR_TIMEOUT;
+    }
+
+    err = ESP8266AT_ERR_ERROR;
+
+    do
+    {
+        sprintf(esp8266at->temp_cmd_buf, "AT+MQTTPUBRAW=0,\"%s\",%lu,%lu,%lu\r\n", topic, length, qos, retain);
+        err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->temp_cmd_buf, ">", timeoutms, &timeoutms);
+        if (err != ESP8266AT_ERR_OK)
+        {
+            break;
+        }
+
+        err = esp8266at_io_write_timedms(esp8266at, (uint8_t *) data, length, NULL, timeoutms, &timeoutms);
+        if (err != ESP8266AT_ERR_OK)
+        {
+            break;
+        }
+        err = esp8266at_io_flush_timedms(esp8266at, timeoutms, &timeoutms);
+        if (err != ESP8266AT_ERR_OK)
+        {
+            break;
+        }
+
+        err = _wait_rsp(esp8266at, "+MQTTPUB:OK\r\n", esp8266at->temp_resp_buf, ESP8266AT_TEMP_RESP_BUF_SIZE, NULL, timeoutms, &timeoutms);
+        if (err != ESP8266AT_ERR_OK)
+        {
+            break;
+        }
+
+        break;
+    } while (1);
+
+    if (remain_timeoutms)
+    {
+        *remain_timeoutms = timeoutms;
+    }
+
+    mutex_unlock(esp8266at->cmd_mutex);
+#endif /* (ESP8266AT__USE_WIZFI360_API == 1) */
+
+    return err;
+}
+
 esp8266at_err_t esp8266at_cmd_at_mqttsub(esp8266at_t *esp8266at, uint32_t id, char *topic, uint32_t qos, uint32_t timeoutms, uint32_t *remain_timeoutms)
 {
     int r;

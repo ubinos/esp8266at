@@ -23,8 +23,10 @@
 #define LOGM_CATEGORY ESP8266AT__LOGM_CATEGORY
 
 #define ESP8266AT_RECV_BUFFER_SIZE 1500
+#define ESP8266AT_MQTT_MSG_BUFFER_SIZE 512
 
 static uint8_t _recv_buf[ESP8266AT_RECV_BUFFER_SIZE];
+static uint8_t _mqtt_msg_buf[ESP8266AT_MQTT_MSG_BUFFER_SIZE];
 
 static uint32_t _timeoutms = 10000;
 
@@ -940,18 +942,18 @@ int esp8266at_cli_at_mqtt_pub(esp8266at_t *esp8266at, char *str, int len, void *
     int r = -1;
     esp8266at_err_t err;
     char topic[128];
-    char data[128];
     uint32_t qos = 0;
     uint32_t retain = 0;
 
     do
     {
 #if (ESP8266AT__USE_WIZFI360_API == 1)
-        sscanf(str, "%s", data);
+        sscanf(str, "%s", _mqtt_msg_buf);
+        err = esp8266at_cmd_at_mqttpub(esp8266at, topic, _mqtt_msg_buf, qos, retain, _timeoutms, NULL);
 #else
-        sscanf(str, "%s %s %lu %lu", topic, data, &qos, &retain);
+        sscanf(str, "%s %s %lu %lu", topic, _mqtt_msg_buf, &qos, &retain);
+        err = esp8266at_cmd_at_mqttpubraw(esp8266at, topic, (char *)_mqtt_msg_buf, strlen((char *)_mqtt_msg_buf), qos, retain, _timeoutms, NULL);
 #endif /* (ESP8266AT__USE_WIZFI360_API == 1) */
-        err = esp8266at_cmd_at_mqttpub(esp8266at, topic, data, qos, retain, _timeoutms, NULL);
         printf("result : err = %d\n", err);
         r = 0;
 
