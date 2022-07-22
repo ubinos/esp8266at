@@ -1398,7 +1398,7 @@ esp8266at_err_t esp8266at_cmd_at_mqttusercfg(esp8266at_t *esp8266at, uint8_t mqt
     int r;
     esp8266at_err_t err;
 
-    if (mqtt_client_id == NULL || mqtt_username == NULL || mqtt_username == NULL)
+    if (mqtt_client_id == NULL || mqtt_username == NULL || mqtt_passwd == NULL)
     {
         return ESP8266AT_ERR_ERROR;
     }
@@ -1451,6 +1451,10 @@ esp8266at_err_t esp8266at_cmd_at_mqtttopic(esp8266at_t *esp8266at, char *pub_top
     esp8266at_err_t err;
     char *ptr1;
 
+    if (pub_topic == NULL || pub_topic == NULL || sub_topic == NULL)
+    {
+        return ESP8266AT_ERR_ERROR;
+    }
 
     r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
     timeoutms = task_getremainingtimeoutms();
@@ -1469,14 +1473,14 @@ esp8266at_err_t esp8266at_cmd_at_mqtttopic(esp8266at_t *esp8266at, char *pub_top
     ptr1 += strlen(ptr1);
     strncpy(esp8266at->mqtt_sub_bufs[0].topic, sub_topic, ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX);    
 
-    if (strlen(sub_topic_2) > 0)
+    if (sub_topic_2 != NULL && strlen(sub_topic_2) > 0)
     {
         sprintf(ptr1, ",\"%s\"", sub_topic_2);
         ptr1 += strlen(ptr1);
         strncpy(esp8266at->mqtt_sub_bufs[1].topic, sub_topic, ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX);    
     }
 
-    if (strlen(sub_topic_3) > 0)
+    if (sub_topic_3 != NULL && strlen(sub_topic_3) > 0)
     {
         sprintf(ptr1, ",\"%s\"", sub_topic_3);
         ptr1 += strlen(ptr1);
