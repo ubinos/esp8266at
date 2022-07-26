@@ -61,11 +61,11 @@ int esp8266at_cli_at(esp8266at_t *esp8266at, char *str, int len, void *arg)
             break;
         }
 
-        cmd = "restart";
+        cmd = "reset";
         cmdlen = strlen(cmd);
         if (tmplen >= cmdlen && strncmp(tmpstr, cmd, cmdlen) == 0)
         {
-            esp8266at_cli_at_restart(esp8266at);
+            esp8266at_cli_at_reset(esp8266at);
             r = 0;
             break;
         }
@@ -173,11 +173,11 @@ void esp8266at_cli_at_test(esp8266at_t *esp8266at)
     printf("result : err = %d\n", err);
 }
 
-void esp8266at_cli_at_restart(esp8266at_t *esp8266at)
+void esp8266at_cli_at_reset(esp8266at_t *esp8266at)
 {
     esp8266at_err_t err;
 
-    err = esp8266at_cmd_at_rst(esp8266at, _timeoutms, NULL);
+    err = esp8266at_reset(esp8266at);
     printf("result : err = %d\n", err);
 }
 
@@ -1108,13 +1108,8 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
         printf("\n==== Quit from the AP ====\n\n");
         esp8266at_cmd_at_cwqap(esp8266at, _timeoutms, NULL);
 
-        printf("\n==== Restarts a module ====\n\n");
-        err = esp8266at_cmd_at_rst(esp8266at, _timeoutms, NULL);
-        if (err != ESP8266AT_ERR_OK)
-        {
-            r = -1;
-            break;
-        }
+        printf("\n==== Reset module ====\n\n");
+        esp8266at_reset(esp8266at);
 
         printf("\n==== Config echo on ====\n\n");
         err = esp8266at_cmd_at_e(esp8266at, 1, _timeoutms, NULL);

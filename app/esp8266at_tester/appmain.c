@@ -149,7 +149,7 @@ static void clihelphookfunc()
 {
     printf("at i                                            : Interactive mode\n");
     printf("at test                                         : Tests AT startup\n");
-    printf("at restart                                      : Restarts a module\n");
+    printf("at reset                                        : Reset module\n");
     printf("at version                                      : Query version information\n");
     printf("at dns                                          : Query DNS configuration\n");
     printf("at sntp                                         : Query SNTP configuration\n");

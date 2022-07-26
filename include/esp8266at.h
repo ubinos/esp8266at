@@ -28,11 +28,11 @@ esp8266at_err_t esp8266at_init(esp8266at_t *esp8266at);
 
 esp8266at_err_t esp8266at_deinit(esp8266at_t *esp8266at);
 
+esp8266at_err_t esp8266at_reset(esp8266at_t *esp8266at);
+
 esp8266at_err_t esp8266at_cmd_at_interactive(esp8266at_t *esp8266at);
 
 esp8266at_err_t esp8266at_cmd_at_test(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms);
-
-esp8266at_err_t esp8266at_cmd_at_rst(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms);
 
 esp8266at_err_t esp8266at_cmd_at_gmr(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms);
 

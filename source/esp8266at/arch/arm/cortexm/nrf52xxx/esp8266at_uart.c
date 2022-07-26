@@ -29,9 +29,8 @@
 static const char * _data_key = ESP8266AT_IO_DATA_KEY;
 static const char * _mqtt_key = ESP8266AT_IO_MQTT_KEY;
 
+static uint8_t _g_esp8266at_uart_initiated = 0;
 static nrf_drv_uart_t _g_esp8266at_uart = NRF_DRV_UART_INSTANCE(1);
-
-static void esp8266at_uart_reset(void);
 
 static void esp8266at_io_event_handler(nrf_drv_uart_event_t *p_event, void *p_context)
 {
@@ -341,30 +340,17 @@ static void esp8266at_io_event_handler(nrf_drv_uart_event_t *p_event, void *p_co
     }
 }
 
-static void esp8266at_uart_reset(void)
+esp8266at_err_t esp8266at_io_module_reset(esp8266at_t *esp8266at)
 {
-    ret_code_t nrf_err;
-    (void) nrf_err;
-    nrf_drv_uart_config_t config;
-
-    nrf_err = nrf_drv_gpiote_init();
-    APP_ERROR_CHECK(nrf_err);
-
-#if (ESP8266AT__USE_RESET_PIN == 1)
-    /* Configure the NRST IO */
-    nrf_drv_gpiote_out_config_t reset_n_config = GPIOTE_CONFIG_OUT_SIMPLE(true);
-    nrf_err = nrf_drv_gpiote_out_init(ESP8266_NRST_Pin, &reset_n_config);
-    APP_ERROR_CHECK(nrf_err);
-#endif /* (ESP8266AT__USE_RESET_PIN == 1) */
+    esp8266at_err_t esp_err;
 
 #if (ESP8266AT__USE_CHIPSELECT_PIN == 1)
-    /* Configure the CS IO */
-    nrf_drv_gpiote_out_config_t cs_config = GPIOTE_CONFIG_OUT_SIMPLE(true);
-    nrf_err = nrf_drv_gpiote_out_init(ESP8266_CS_Pin, &cs_config);
-    APP_ERROR_CHECK(nrf_err);
-
+    /* Deassert chip select */
+    nrf_drv_gpiote_out_clear(ESP8266_CS_Pin);
+    nrf_delay_ms(100);
     /* Assert chip select */
     nrf_drv_gpiote_out_set(ESP8266_CS_Pin);
+    nrf_delay_ms(100);
 #endif /* (ESP8266AT__USE_CHIPSELECT_PIN == 1) */
 
 #if (ESP8266AT__USE_RESET_PIN == 1)
@@ -377,6 +363,18 @@ static void esp8266at_uart_reset(void)
 #else
     nrf_delay_ms(1000);
 #endif /* (ESP8266AT__USE_RESET_PIN == 1) */
+
+    esp_err = ESP8266AT_ERR_OK;
+
+    return esp_err;
+}
+
+esp8266at_err_t esp8266at_io_uart_reset(esp8266at_t *esp8266at)
+{
+    ret_code_t nrf_err;
+    (void) nrf_err;
+    nrf_drv_uart_config_t config;
+    esp8266at_err_t esp_err;
 
     config.pseltxd = ESP8266_UART_TX_Pin;
     config.pselrxd = ESP8266_UART_RX_Pin;
@@ -396,21 +394,52 @@ static void esp8266at_uart_reset(void)
 #if defined(NRF_DRV_UART_WITH_UARTE) && defined(NRF_DRV_UART_WITH_UART)
     config.use_easy_dma = true;
 #endif
+
+    if (_g_esp8266at_uart_initiated)
+    {
+        nrf_drv_uart_uninit(&_g_esp8266at_uart);
+    }
+
     nrf_err = nrf_drv_uart_init(&_g_esp8266at_uart, &config, esp8266at_io_event_handler);
     assert(nrf_err == NRF_SUCCESS);
+    
+    cbuf_clear(esp8266at->io_read_buf);
+    nrf_drv_uart_rx(&_g_esp8266at_uart, esp8266at->io_temp_rx_buf, ESP8266AT_IO_TEMP_RX_BUF_SIZE);
+
+    _g_esp8266at_uart_initiated = 1;
+
+    esp_err = ESP8266AT_ERR_OK;
+
+    return esp_err;
 }
 
 esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at)
 {
+    ret_code_t nrf_err;
+    (void) nrf_err;
     esp8266at_err_t esp_err;
+
     assert(esp8266at != NULL);
 
-    esp8266at_uart_reset();
+    nrf_err = nrf_drv_gpiote_init();
+    APP_ERROR_CHECK(nrf_err);
 
-    if (!cbuf_is_full(esp8266at->io_read_buf))
-    {
-        nrf_drv_uart_rx(&_g_esp8266at_uart, esp8266at->io_temp_rx_buf, ESP8266AT_IO_TEMP_RX_BUF_SIZE);
-    }
+#if (ESP8266AT__USE_RESET_PIN == 1)
+    /* Configure the NRST IO */
+    nrf_drv_gpiote_out_config_t reset_n_config = GPIOTE_CONFIG_OUT_SIMPLE(true);
+    nrf_err = nrf_drv_gpiote_out_init(ESP8266_NRST_Pin, &reset_n_config);
+    APP_ERROR_CHECK(nrf_err);
+#endif /* (ESP8266AT__USE_RESET_PIN == 1) */
+
+#if (ESP8266AT__USE_CHIPSELECT_PIN == 1)
+    /* Configure the CS IO */
+    nrf_drv_gpiote_out_config_t cs_config = GPIOTE_CONFIG_OUT_SIMPLE(true);
+    nrf_err = nrf_drv_gpiote_out_init(ESP8266_CS_Pin, &cs_config);
+    APP_ERROR_CHECK(nrf_err);
+#endif /* (ESP8266AT__USE_CHIPSELECT_PIN == 1) */
+
+    esp8266at_io_module_reset(esp8266at);
+    esp8266at_io_uart_reset(esp8266at);
 
     esp_err = ESP8266AT_ERR_OK;
 

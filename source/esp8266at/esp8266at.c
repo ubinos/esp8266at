@@ -148,6 +148,18 @@ esp8266at_err_t esp8266at_deinit(esp8266at_t *esp8266at)
     return esp_err;
 }
 
+esp8266at_err_t esp8266at_reset(esp8266at_t *esp8266at)
+{
+    esp8266at_err_t err;
+
+    esp8266at_io_module_reset(esp8266at);
+    esp8266at_io_uart_reset(esp8266at);
+
+    err = ESP8266AT_ERR_OK;
+
+    return err;
+}
+
 static esp8266at_err_t _wait_rsp(esp8266at_t *esp8266at, char *rsp, uint8_t *buffer, uint32_t length, uint32_t *received, uint32_t timeoutms,
         uint32_t *remain_timeoutms)
 {
@@ -399,50 +411,6 @@ esp8266at_err_t esp8266at_cmd_at_test(esp8266at_t *esp8266at, uint32_t timeoutms
     }
 
     mutex_unlock(esp8266at->cmd_mutex);
-
-    return err;
-}
-
-esp8266at_err_t esp8266at_cmd_at_rst(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms)
-{
-    int r;
-    esp8266at_err_t err;
-
-
-#if (UBINOS__BSP__NRF52_NRF52XXX == 1)
-    (void) r;
-    err = ESP8266AT_ERR_OK;
-#else
-    r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
-    timeoutms = task_getremainingtimeoutms();
-    if (r == UBIK_ERR__TIMEOUT)
-    {
-        return ESP8266AT_ERR_TIMEOUT;
-    }
-
-    esp8266at->io_rx_mode = ESP8266AT_IO_RX_MODE_RESP;
-    esp8266at->io_data_key_i = 0;
-    esp8266at->io_mqtt_key_i = 0;
-
-    err = _send_cmd_and_wait_rsp(esp8266at, "AT+RST\r\n", "OK\r\n", timeoutms, &timeoutms);
-
-    task_sleepms(ESP8266AT_RESTART_SETUP_TIME_MS);
-    if (timeoutms < ESP8266AT_RESTART_SETUP_TIME_MS)
-    {
-        timeoutms = 0;
-    }
-    else
-    {
-        timeoutms -= ESP8266AT_RESTART_SETUP_TIME_MS;
-    }
-
-    if (remain_timeoutms)
-    {
-        *remain_timeoutms = timeoutms;
-    }
-
-    mutex_unlock(esp8266at->cmd_mutex);
-#endif /* (UBINOS__BSP__NRF52_NRF52XXX == 1) */
 
     return err;
 }

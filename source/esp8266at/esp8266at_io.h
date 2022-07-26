@@ -25,6 +25,9 @@ extern "C"
 esp8266at_err_t esp8266at_io_init(esp8266at_t *esp8266at);
 esp8266at_err_t esp8266at_io_deinit(esp8266at_t *esp8266at);
 
+esp8266at_err_t esp8266at_io_module_reset(esp8266at_t *esp8266at);
+esp8266at_err_t esp8266at_io_uart_reset(esp8266at_t *esp8266at);
+
 esp8266at_err_t esp8266at_io_read_buf_clear(esp8266at_t *esp8266at);
 esp8266at_err_t esp8266at_io_read_buf_clear_timedms(esp8266at_t *esp8266at, uint32_t timeoutms, uint32_t *remain_timeoutms);
 esp8266at_err_t esp8266at_io_read_buf_clear_advan(esp8266at_t *esp8266at, uint16_t io_option, uint32_t timeoutms, uint32_t *remain_timeoutms);
