@@ -77,7 +77,7 @@ esp8266at_err_t esp8266at_init(esp8266at_t *esp8266at)
     assert(ubi_err == UBI_ERR_OK);
 
     esp_err = esp8266at_io_init(esp8266at);
-    assert(esp_err == ESP8266AT_ERR_OK);
+    assert(esp_err == UBI_ST_OK);
 
     memset(esp8266at->ssid, 0, ESP8266AT_SSID_LENGTH_MAX);
     memset(esp8266at->passwd, 0, ESP8266AT_PASSWD_LENGTH_MAX);
@@ -110,7 +110,7 @@ esp8266at_err_t esp8266at_init(esp8266at_t *esp8266at)
     esp8266at->io_mqtt_key_i = 0;
     esp8266at->io_mqtt_topic_i = 0;
 
-    esp_err = ESP8266AT_ERR_OK;
+    esp_err = UBI_ST_OK;
 
     return esp_err;
 }
@@ -155,7 +155,7 @@ esp8266at_err_t esp8266at_reset(esp8266at_t *esp8266at)
     esp8266at_io_module_reset(esp8266at);
     esp8266at_io_uart_reset(esp8266at);
 
-    err = ESP8266AT_ERR_OK;
+    err = UBI_ST_OK;
 
     return err;
 }
@@ -169,7 +169,7 @@ static esp8266at_err_t _wait_rsp(esp8266at_t *esp8266at, char *rsp, uint8_t *buf
     uint32_t rsp_i;
     uint32_t buf_i;
 
-    err = ESP8266AT_ERR_ERROR;
+    err = UBI_ST_ERR;
 
     logmd("wait response : begin");
     logmfd("wait response : \"%s\"", rsp);
@@ -187,13 +187,13 @@ static esp8266at_err_t _wait_rsp(esp8266at_t *esp8266at, char *rsp, uint8_t *buf
         while ((rsp_i < rsp_len) && (buf_i < length - 1))
         {
             err = esp8266at_io_read_timedms(esp8266at, &buffer[buf_i], 1, &read, timeoutms, &timeoutms);
-            if (err != ESP8266AT_ERR_OK)
+            if (err != UBI_ST_OK)
             {
                 break;
             }
             if (read != 1)
             {
-                err = ESP8266AT_ERR_ERROR;
+                err = UBI_ST_ERR;
                 break;
             }
 
@@ -212,7 +212,7 @@ static esp8266at_err_t _wait_rsp(esp8266at_t *esp8266at, char *rsp, uint8_t *buf
 
         if (rsp_i != rsp_len)
         {
-            err = ESP8266AT_ERR_ERROR;
+            err = UBI_ST_ERR;
             break;
         }
 
@@ -221,7 +221,7 @@ static esp8266at_err_t _wait_rsp(esp8266at_t *esp8266at, char *rsp, uint8_t *buf
             *received = buf_i;
         }
 
-        err = ESP8266AT_ERR_OK;
+        err = UBI_ST_OK;
 
         break;
     } while (1);
@@ -241,7 +241,7 @@ static esp8266at_err_t _send_cmd_and_wait_rsp(esp8266at_t *esp8266at, char *cmd,
 {
     esp8266at_err_t err;
 
-    err = ESP8266AT_ERR_ERROR;
+    err = UBI_ST_ERR;
 
     logmd("send command : begin");
     logmfd("send command : command = \"%s\", expected response = \"%s\"", cmd, rsp);
@@ -249,24 +249,24 @@ static esp8266at_err_t _send_cmd_and_wait_rsp(esp8266at_t *esp8266at, char *cmd,
     do
     {
         err = esp8266at_io_read_buf_clear_timedms(esp8266at, timeoutms, &timeoutms);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             break;
         }
 
         err = esp8266at_io_write_timedms(esp8266at, (uint8_t*) cmd, strlen(cmd), NULL, timeoutms, &timeoutms);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             break;
         }
         err = esp8266at_io_flush_timedms(esp8266at, timeoutms, &timeoutms);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             break;
         }
 
         err = _wait_rsp(esp8266at, rsp, esp8266at->temp_resp_buf, ESP8266AT_TEMP_RESP_BUF_SIZE, NULL, timeoutms, &timeoutms);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             break;
         }
@@ -311,12 +311,12 @@ esp8266at_err_t esp8266at_cmd_at_interactive(esp8266at_t *esp8266at)
     int old_echo;
     uint8_t ignore_lf = 0;
 
-    err = ESP8266AT_ERR_ERROR;
+    err = UBI_ST_ERR;
 
     r = mutex_lock(esp8266at->cmd_mutex);
     if (r != 0)
     {
-        return ESP8266AT_ERR_ERROR;
+        return UBI_ST_ERR;
     }
 
     do {
@@ -324,7 +324,7 @@ esp8266at_err_t esp8266at_cmd_at_interactive(esp8266at_t *esp8266at)
         r = task_create_noautodel(&recv_task, _esp8266at_interactive_recvfunc, esp8266at, task_getmiddlepriority(), 0, "esp8266at_i_recv");
         if (r != 0)
         {
-            err = ESP8266AT_ERR_ERROR;
+            err = UBI_ST_ERR;
             break;
         }
         old_echo = dtty_getecho();
@@ -340,7 +340,7 @@ esp8266at_err_t esp8266at_cmd_at_interactive(esp8266at_t *esp8266at)
             }
             if (data[0] == '\033') // ESC
             {
-                err = ESP8266AT_ERR_OK;
+                err = UBI_ST_OK;
                 break;
             }
             if (ignore_lf)
@@ -363,12 +363,12 @@ esp8266at_err_t esp8266at_cmd_at_interactive(esp8266at_t *esp8266at)
             }
 
             err = esp8266at_io_write_timedms(esp8266at, (uint8_t*) data, len, NULL, UINT32_MAX, NULL);
-            if (err != ESP8266AT_ERR_OK)
+            if (err != UBI_ST_OK)
             {
                 break;
             }
             err = esp8266at_io_flush_timedms(esp8266at, UINT32_MAX, NULL);
-            if (err != ESP8266AT_ERR_OK)
+            if (err != UBI_ST_OK)
             {
                 break;
             }
@@ -379,7 +379,7 @@ esp8266at_err_t esp8266at_cmd_at_interactive(esp8266at_t *esp8266at)
         r = task_join_and_delete(&recv_task, NULL, 1);
         if (r != 0)
         {
-            err = ESP8266AT_ERR_ERROR;
+            err = UBI_ST_ERR;
             break;
         }
 
@@ -400,7 +400,7 @@ esp8266at_err_t esp8266at_cmd_at_test(esp8266at_t *esp8266at, uint32_t timeoutms
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     err = _send_cmd_and_wait_rsp(esp8266at, "AT\r\n", "OK\r\n", timeoutms, &timeoutms);
@@ -428,12 +428,12 @@ esp8266at_err_t esp8266at_cmd_at_gmr(esp8266at_t *esp8266at, uint32_t timeoutms,
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     err = _send_cmd_and_wait_rsp(esp8266at, "AT+GMR\r\n", "OK\r\n", timeoutms, &timeoutms);
 
-    if (err == ESP8266AT_ERR_OK)
+    if (err == UBI_ST_OK)
     {
         do
         {
@@ -477,7 +477,7 @@ esp8266at_err_t esp8266at_cmd_at_e(esp8266at_t *esp8266at, int is_on, uint32_t t
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     sprintf(esp8266at->temp_cmd_buf, "ATE%d\r\n", is_on);
@@ -512,7 +512,7 @@ esp8266at_err_t esp8266at_cmd_at_cwmode(esp8266at_t *esp8266at, int mode, uint32
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     sprintf(esp8266at->temp_cmd_buf, "AT+CWMODE=%d\r\n", mode);
@@ -547,12 +547,12 @@ esp8266at_err_t esp8266at_cmd_at_cipmux(esp8266at_t *esp8266at, int mode, uint32
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     sprintf(esp8266at->temp_cmd_buf, "AT+CIPMUX=%d\r\n", mode);
     err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->temp_cmd_buf, "OK\r\n", timeoutms, &timeoutms);
-    if (err == ESP8266AT_ERR_OK)
+    if (err == UBI_ST_OK)
     {
         esp8266at->mux_mode = mode;
     }
@@ -589,7 +589,7 @@ esp8266at_err_t esp8266at_cmd_at_cwjap(esp8266at_t *esp8266at, char *ssid, char 
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     if (esp8266at->ssid != ssid)
@@ -623,7 +623,7 @@ esp8266at_err_t esp8266at_cmd_at_cwqap(esp8266at_t *esp8266at, uint32_t timeoutm
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     task_sleepms(500);
@@ -662,19 +662,19 @@ esp8266at_err_t esp8266at_cmd_at_cifsr(esp8266at_t *esp8266at, uint32_t timeoutm
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     err = _send_cmd_and_wait_rsp(esp8266at, "AT+CIFSR\r\n", "OK\r\n", timeoutms, &timeoutms);
 
-    if (err == ESP8266AT_ERR_OK)
+    if (err == UBI_ST_OK)
     {
         do
         {
             ptr1 = strstr((char*) esp8266at->temp_resp_buf, key);
             if (ptr1 == NULL)
             {
-                err = ESP8266AT_ERR_ERROR;
+                err = UBI_ST_ERR;
                 break;
             }
             ptr1 = (char*) (((unsigned int) ptr1) + strlen(key));
@@ -682,7 +682,7 @@ esp8266at_err_t esp8266at_cmd_at_cifsr(esp8266at_t *esp8266at, uint32_t timeoutm
             ptr2 = strstr(ptr1, "\"");
             if (ptr2 == NULL || ptr1 >= ptr2)
             {
-                err = ESP8266AT_ERR_ERROR;
+                err = UBI_ST_ERR;
                 break;
             }
 
@@ -698,7 +698,7 @@ esp8266at_err_t esp8266at_cmd_at_cifsr(esp8266at_t *esp8266at, uint32_t timeoutm
             ptr1 = strstr((char*) esp8266at->temp_resp_buf, key2);
             if (ptr1 == NULL)
             {
-                err = ESP8266AT_ERR_ERROR;
+                err = UBI_ST_ERR;
                 break;
             }
             ptr1 = (char*) (((unsigned int) ptr1) + strlen(key2));
@@ -706,7 +706,7 @@ esp8266at_err_t esp8266at_cmd_at_cifsr(esp8266at_t *esp8266at, uint32_t timeoutm
             ptr2 = strstr(ptr1, "\"");
             if (ptr2 == NULL || ptr1 >= ptr2)
             {
-                err = ESP8266AT_ERR_ERROR;
+                err = UBI_ST_ERR;
                 break;
             }
 
@@ -718,7 +718,7 @@ esp8266at_err_t esp8266at_cmd_at_cifsr(esp8266at_t *esp8266at, uint32_t timeoutm
         } while (1);
     }
 
-    if (err != ESP8266AT_ERR_OK)
+    if (err != UBI_ST_OK)
     {
         memset(esp8266at->ip_addr, 0, ESP8266AT_IP_ADDR_LENGTH_MAX);
         memset(esp8266at->mac_addr, 0, ESP8266AT_MAC_ADDR_LENGTH_MAX);
@@ -743,7 +743,7 @@ esp8266at_err_t esp8266at_cmd_at_cipstart(esp8266at_t *esp8266at, char *type, ch
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     sprintf(esp8266at->temp_cmd_buf, "AT+CIPSTART=\"%s\",\"%s\",%lu\r\n", type, ip, port);
@@ -769,7 +769,7 @@ esp8266at_err_t esp8266at_cmd_at_cipstart_multiple(esp8266at_t *esp8266at, int i
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     sprintf(esp8266at->temp_cmd_buf, "AT+CIPSTART=%d,\"%s\",\"%s\",%lu\r\n", id, type, ip, port);
@@ -794,7 +794,7 @@ esp8266at_err_t esp8266at_cmd_at_cipclose(esp8266at_t *esp8266at, uint32_t timeo
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     err = _send_cmd_and_wait_rsp(esp8266at, "AT+CIPCLOSE\r\n", "OK\r\n", timeoutms, &timeoutms);
@@ -818,33 +818,33 @@ esp8266at_err_t esp8266at_cmd_at_cipsend(esp8266at_t *esp8266at, uint8_t *buffer
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
-    err = ESP8266AT_ERR_ERROR;
+    err = UBI_ST_ERR;
 
     do
     {
         sprintf(esp8266at->temp_cmd_buf, "AT+CIPSEND=%lu\r\n", length);
         err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->temp_cmd_buf, ">", timeoutms, &timeoutms);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             break;
         }
 
         err = esp8266at_io_write_timedms(esp8266at, buffer, length, NULL, timeoutms, &timeoutms);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             break;
         }
         err = esp8266at_io_flush_timedms(esp8266at, timeoutms, &timeoutms);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             break;
         }
 
         err = _wait_rsp(esp8266at, "SEND OK\r\n", esp8266at->temp_resp_buf, ESP8266AT_TEMP_RESP_BUF_SIZE, NULL, timeoutms, &timeoutms);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             break;
         }
@@ -875,10 +875,10 @@ esp8266at_err_t esp8266at_cmd_at_ciprecv(esp8266at_t *esp8266at, uint8_t *buffer
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
-    esp_err = ESP8266AT_ERR_ERROR;
+    esp_err = UBI_ST_ERR;
 
     read_tmp = 0;
     read_tmp2 = 0;
@@ -891,26 +891,26 @@ esp8266at_err_t esp8266at_cmd_at_ciprecv(esp8266at_t *esp8266at, uint8_t *buffer
 
         if (read_tmp >= length)
         {
-            esp_err = ESP8266AT_ERR_OK;
+            esp_err = UBI_ST_OK;
             break;
         }
         else
         {
             if (timeoutms == 0)
             {
-                esp_err = ESP8266AT_ERR_TIMEOUT;
+                esp_err = UBI_ST_TIMEOUT;
                 break;
             }
             r = sem_take_timedms(esp8266at->io_data_read_sem, timeoutms);
             timeoutms = task_getremainingtimeoutms();
             if (r == UBIK_ERR__TIMEOUT)
             {
-                esp_err = ESP8266AT_ERR_TIMEOUT;
+                esp_err = UBI_ST_TIMEOUT;
                 break;
             }
             if (r != 0)
             {
-                esp_err = ESP8266AT_ERR_ERROR;
+                esp_err = UBI_ST_ERR;
                 break;
             }
         }
@@ -941,7 +941,7 @@ esp8266at_err_t esp8266at_cmd_at_cipdns(esp8266at_t *esp8266at, uint8_t enable, 
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     esp8266at->dns_enable = enable;
@@ -1004,12 +1004,12 @@ esp8266at_err_t esp8266at_cmd_at_cipdns_q(esp8266at_t *esp8266at, uint32_t timeo
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     err = _send_cmd_and_wait_rsp(esp8266at, "AT+"_CIPDNS_STRING"?\r\n", "OK\r\n", timeoutms, &timeoutms);
 
-    if (err == ESP8266AT_ERR_OK)
+    if (err == UBI_ST_OK)
     {
         do
         {
@@ -1076,7 +1076,7 @@ esp8266at_err_t esp8266at_cmd_at_cipsntpcfg(esp8266at_t *esp8266at, uint8_t enab
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     esp8266at->sntp_enable = enable;
@@ -1140,12 +1140,12 @@ esp8266at_err_t esp8266at_cmd_at_cipsntpcfg_q(esp8266at_t *esp8266at, uint32_t t
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     err = _send_cmd_and_wait_rsp(esp8266at, "AT+CIPSNTPCFG?\r\n", "OK\r\n", timeoutms, &timeoutms);
 
-    if (err == ESP8266AT_ERR_OK)
+    if (err == UBI_ST_OK)
     {
         do
         {
@@ -1226,21 +1226,21 @@ esp8266at_err_t esp8266at_cmd_at_cipsntptime(esp8266at_t *esp8266at, struct tm *
 
     if (tm_ptr == NULL)
     {
-        return ESP8266AT_ERR_ERROR;
+        return UBI_ST_ERR;
     }
 
     r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     err = _send_cmd_and_wait_rsp(esp8266at, "AT+CIPSNTPTIME?\r\n", "OK\r\n", timeoutms, &timeoutms);
 
-    if (err == ESP8266AT_ERR_OK)
+    if (err == UBI_ST_OK)
     {
-        err = ESP8266AT_ERR_ERROR;
+        err = UBI_ST_ERR;
         do
         {
             ptr1 = strstr((char*) esp8266at->temp_resp_buf, key);
@@ -1346,7 +1346,7 @@ esp8266at_err_t esp8266at_cmd_at_cipsntptime(esp8266at_t *esp8266at, struct tm *
             tm_ptr->tm_year -= 1900;
 
             ////
-            err = ESP8266AT_ERR_OK;
+            err = UBI_ST_OK;
             break;
         } while (1);
     }
@@ -1368,14 +1368,14 @@ esp8266at_err_t esp8266at_cmd_at_mqttusercfg(esp8266at_t *esp8266at, uint8_t mqt
 
     if (mqtt_client_id == NULL || mqtt_username == NULL || mqtt_passwd == NULL)
     {
-        return ESP8266AT_ERR_ERROR;
+        return UBI_ST_ERR;
     }
 
     r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     esp8266at->mqtt_scheme = mqtt_scheme;
@@ -1393,10 +1393,10 @@ esp8266at_err_t esp8266at_cmd_at_mqttusercfg(esp8266at_t *esp8266at, uint8_t mqt
     }
 
 #if (ESP8266AT__USE_WIZFI360_API == 1)
-    sprintf(esp8266at->temp_cmd_buf, "AT+MQTTSET=\"%s\",\"%s\",\"%s\",60\r\n", 
+    sprintf(esp8266at->temp_cmd_buf, "AT+MQTTSET=\"%s\",\"%s\",\"%s\",60\r\n",
         mqtt_username, mqtt_passwd, mqtt_client_id);
 #else
-    sprintf(esp8266at->temp_cmd_buf, "AT+MQTTUSERCFG=0,%d,\"%s\",\"%s\",\"%s\",0,0,\"\"\r\n", 
+    sprintf(esp8266at->temp_cmd_buf, "AT+MQTTUSERCFG=0,%d,\"%s\",\"%s\",\"%s\",0,0,\"\"\r\n",
         mqtt_scheme, mqtt_client_id, mqtt_username, mqtt_passwd);
 #endif /* (ESP8266AT__USE_WIZFI360_API == 1) */
 
@@ -1421,14 +1421,14 @@ esp8266at_err_t esp8266at_cmd_at_mqtttopic(esp8266at_t *esp8266at, char *pub_top
 
     if (pub_topic == NULL || pub_topic == NULL || sub_topic == NULL)
     {
-        return ESP8266AT_ERR_ERROR;
+        return UBI_ST_ERR;
     }
 
     r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     sprintf(esp8266at->temp_cmd_buf, "AT+MQTTTOPIC=");
@@ -1439,20 +1439,20 @@ esp8266at_err_t esp8266at_cmd_at_mqtttopic(esp8266at_t *esp8266at, char *pub_top
 
     sprintf(ptr1, ",\"%s\"", sub_topic);
     ptr1 += strlen(ptr1);
-    strncpy(esp8266at->mqtt_sub_bufs[0].topic, sub_topic, ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX);    
+    strncpy(esp8266at->mqtt_sub_bufs[0].topic, sub_topic, ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX);
 
     if (sub_topic_2 != NULL && strlen(sub_topic_2) > 0)
     {
         sprintf(ptr1, ",\"%s\"", sub_topic_2);
         ptr1 += strlen(ptr1);
-        strncpy(esp8266at->mqtt_sub_bufs[1].topic, sub_topic, ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX);    
+        strncpy(esp8266at->mqtt_sub_bufs[1].topic, sub_topic, ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX);
     }
 
     if (sub_topic_3 != NULL && strlen(sub_topic_3) > 0)
     {
         sprintf(ptr1, ",\"%s\"", sub_topic_3);
         ptr1 += strlen(ptr1);
-        strncpy(esp8266at->mqtt_sub_bufs[2].topic, sub_topic, ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX);    
+        strncpy(esp8266at->mqtt_sub_bufs[2].topic, sub_topic, ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX);
     }
 
     sprintf(ptr1, "\r\n");
@@ -1480,7 +1480,7 @@ esp8266at_err_t esp8266at_cmd_at_mqttconn(esp8266at_t *esp8266at, char *ip, uint
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
 #if (ESP8266AT__USE_WIZFI360_API == 1)
@@ -1518,7 +1518,7 @@ esp8266at_err_t esp8266at_cmd_at_mqttclean(esp8266at_t *esp8266at, uint32_t time
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
 #if (ESP8266AT__USE_WIZFI360_API == 1)
@@ -1546,7 +1546,7 @@ esp8266at_err_t esp8266at_cmd_at_mqttpub(esp8266at_t *esp8266at, char *topic, ch
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
 #if (ESP8266AT__USE_WIZFI360_API == 1)
@@ -1580,33 +1580,33 @@ esp8266at_err_t esp8266at_cmd_at_mqttpubraw(esp8266at_t *esp8266at, char *topic,
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
-    err = ESP8266AT_ERR_ERROR;
+    err = UBI_ST_ERR;
 
     do
     {
         sprintf(esp8266at->temp_cmd_buf, "AT+MQTTPUBRAW=0,\"%s\",%lu,%lu,%lu\r\n", topic, length, qos, retain);
         err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->temp_cmd_buf, ">", timeoutms, &timeoutms);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             break;
         }
 
         err = esp8266at_io_write_timedms(esp8266at, (uint8_t *) data, length, NULL, timeoutms, &timeoutms);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             break;
         }
         err = esp8266at_io_flush_timedms(esp8266at, timeoutms, &timeoutms);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             break;
         }
 
         err = _wait_rsp(esp8266at, "+MQTTPUB:OK\r\n", esp8266at->temp_resp_buf, ESP8266AT_TEMP_RESP_BUF_SIZE, NULL, timeoutms, &timeoutms);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             break;
         }
@@ -1632,14 +1632,14 @@ esp8266at_err_t esp8266at_cmd_at_mqttsub(esp8266at_t *esp8266at, uint32_t id, ch
 
     if (id >= ESP8266AT_IO_MQTT_SUB_BUF_MAX)
     {
-        return ESP8266AT_ERR_ERROR;
+        return UBI_ST_ERR;
     }
 
     r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     strncpy(esp8266at->mqtt_sub_bufs[id].topic, topic, ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX);
@@ -1666,7 +1666,7 @@ esp8266at_err_t esp8266at_cmd_at_mqttsub_q(esp8266at_t *esp8266at, uint32_t time
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     sprintf(esp8266at->temp_cmd_buf, "AT+MQTTSUB?\r\n");
@@ -1689,20 +1689,20 @@ esp8266at_err_t esp8266at_cmd_at_mqttunsub(esp8266at_t *esp8266at, uint32_t id, 
 
     if (id >= ESP8266AT_IO_MQTT_SUB_BUF_MAX)
     {
-        return ESP8266AT_ERR_ERROR;
+        return UBI_ST_ERR;
     }
 
     r = mutex_lock_timedms(esp8266at->cmd_mutex, timeoutms);
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     sprintf(esp8266at->temp_cmd_buf, "AT+MQTTUNSUB=0,\"%s\"\r\n", esp8266at->mqtt_sub_bufs[id].topic);
     err = _send_cmd_and_wait_rsp(esp8266at, esp8266at->temp_cmd_buf, "OK\r\n", timeoutms, &timeoutms);
 
-    if (err == ESP8266AT_ERR_OK)
+    if (err == UBI_ST_OK)
     {
         memset(esp8266at->mqtt_sub_bufs[id].topic, 0, ESP8266AT_IO_MQTT_TOPIC_LENGTH_MAX);
     }
@@ -1730,7 +1730,7 @@ esp8266at_err_t esp8266at_cmd_at_mqttsubget(esp8266at_t *esp8266at, uint32_t id,
 
     if (id >= ESP8266AT_IO_MQTT_SUB_BUF_MAX)
     {
-        return ESP8266AT_ERR_ERROR;
+        return UBI_ST_ERR;
     }
 
     sub_buf_p = &esp8266at->mqtt_sub_bufs[id];
@@ -1739,7 +1739,7 @@ esp8266at_err_t esp8266at_cmd_at_mqttsubget(esp8266at_t *esp8266at, uint32_t id,
     timeoutms = task_getremainingtimeoutms();
     if (r == UBIK_ERR__TIMEOUT)
     {
-        return ESP8266AT_ERR_TIMEOUT;
+        return UBI_ST_TIMEOUT;
     }
 
     do
@@ -1748,12 +1748,12 @@ esp8266at_err_t esp8266at_cmd_at_mqttsubget(esp8266at_t *esp8266at, uint32_t id,
         timeoutms = task_getremainingtimeoutms();
         if (r == UBIK_ERR__TIMEOUT)
         {
-            esp_err = ESP8266AT_ERR_TIMEOUT;
+            esp_err = UBI_ST_TIMEOUT;
             break;
         }
         if (r != 0)
         {
-            esp_err = ESP8266AT_ERR_ERROR;
+            esp_err = UBI_ST_ERR;
             break;
         }
 
@@ -1764,14 +1764,14 @@ esp8266at_err_t esp8266at_cmd_at_mqttsubget(esp8266at_t *esp8266at, uint32_t id,
             assert(ubi_err == UBI_ERR_OK);
             ubi_err = cbuf_read(sub_buf_p->data_buf, NULL, sub_msg - len, NULL);
             assert(ubi_err == UBI_ERR_OK);
-            esp_err = ESP8266AT_ERR_IO_OVERFLOW;
+            esp_err = UBI_ST_ERR_OVERFLOW;
         }
         else
         {
             len = sub_msg;
             ubi_err = cbuf_read(sub_buf_p->data_buf, buffer, len, &read_tmp);
             assert(ubi_err == UBI_ERR_OK);
-            esp_err = ESP8266AT_ERR_OK;
+            esp_err = UBI_ST_OK;
         }
 
         break;

@@ -228,7 +228,7 @@ void esp8266at_cli_at_query_sntptime(esp8266at_t *esp8266at)
     struct tm tm_data;
 
     err = esp8266at_cmd_at_cipsntptime(esp8266at, &tm_data, _timeoutms, NULL);
-    printf("result : err = %d, year = %d, mon = %d, mday = %d, wday = %d, hour = %d, min = %d, sec = %d\n", err, 
+    printf("result : err = %d, year = %d, mon = %d, mday = %d, wday = %d, hour = %d, min = %d, sec = %d\n", err,
         tm_data.tm_year + 1900, tm_data.tm_mon + 1, tm_data.tm_mday, tm_data.tm_wday, tm_data.tm_hour, tm_data.tm_min, tm_data.tm_sec);
 }
 
@@ -455,7 +455,7 @@ int esp8266at_cli_at_config_sntpcfg(esp8266at_t *esp8266at, char *str, int len, 
     do
     {
         memset(sntp_server_addr, 0, 3 * ESP8266AT_SNTP_SERVER_ADDR_LENGTH_MAX);
-        sscanf(str, "%d %d %s %s %s", &enable, &timezone, 
+        sscanf(str, "%d %d %s %s %s", &enable, &timezone,
             sntp_server_addr[0], sntp_server_addr[1], sntp_server_addr[2]);
 
         r = esp8266at_cmd_at_cipsntpcfg(esp8266at, enable, timezone,
@@ -579,7 +579,7 @@ int esp8266at_cli_at_ap_quit(esp8266at_t *esp8266at, char *str, int len, void *a
     do
     {
         err = esp8266at_cmd_at_cwqap(esp8266at, _timeoutms, NULL);
-        if (err != ESP8266AT_ERR_OK) {
+        if (err != UBI_ST_OK) {
             break;
         }
 
@@ -599,7 +599,7 @@ int esp8266at_cli_at_ap_query_ip(esp8266at_t *esp8266at, char *str, int len, voi
     esp8266at_err_t err;
 
     err = esp8266at_cmd_at_cifsr(esp8266at, _timeoutms, NULL);
-    if (err != ESP8266AT_ERR_OK)
+    if (err != UBI_ST_OK)
     {
         r = -1;
     }
@@ -1062,14 +1062,14 @@ int esp8266at_cli_rdate(esp8266at_t *esp8266at, char *str, int len, void *arg)
     do
     {
         err = esp8266at_cmd_at_cipsntptime(esp8266at, &tm_data, _timeoutms, NULL);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             break;
         }
 
         if (tm_data.tm_year <= 70)
         {
-            err = ESP8266AT_ERR_ERROR;
+            err = UBI_ST_ERR;
             break;
         }
 
@@ -1113,7 +1113,7 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
 
         printf("\n==== Config echo on ====\n\n");
         err = esp8266at_cmd_at_e(esp8266at, 1, _timeoutms, NULL);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             r = -1;
             break;
@@ -1121,7 +1121,7 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
 
         printf("\n==== Config IP multiple connection mode 0 ====\n\n");
         err = esp8266at_cmd_at_cipmux(esp8266at, 0, _timeoutms, NULL);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             r = -1;
             break;
@@ -1129,7 +1129,7 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
 
         printf("\n==== Config WiFi mode 1 ====\n\n");
         err = esp8266at_cmd_at_cwmode(esp8266at, 1, _timeoutms, NULL);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             r = -1;
             break;
@@ -1137,7 +1137,7 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
 
         printf("\n==== Join to an AP ====\n\n");
         err = esp8266at_cmd_at_cwjap(esp8266at, ssid, passwd, _timeoutms * 3, NULL);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             r = -1;
             break;
@@ -1145,7 +1145,7 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
 
         printf("\n==== Query local IP ====\n\n");
         err = esp8266at_cmd_at_cifsr(esp8266at, _timeoutms, NULL);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             r = -1;
             break;
@@ -1153,7 +1153,7 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
 
         printf("\n==== Open connection ====\n\n");
         err = esp8266at_cmd_at_cipstart(esp8266at, "TCP", ip, port, _timeoutms * 3, NULL);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             r = -1;
             break;
@@ -1165,14 +1165,14 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
             sprintf(msg, "%03lu hello", i);
             msglen = strlen(msg);
             err = esp8266at_cmd_at_cipsend(esp8266at, (uint8_t*) msg, msglen, _timeoutms, NULL);
-            if (err != ESP8266AT_ERR_OK)
+            if (err != UBI_ST_OK)
             {
                 break;
             }
 
             printf("\n---- Receive message ----\n");
             err = esp8266at_cmd_at_ciprecv(esp8266at, _recv_buf, msglen, &read, _timeoutms, NULL);
-            if (err != ESP8266AT_ERR_OK)
+            if (err != UBI_ST_OK)
             {
                 break;
             }
@@ -1180,13 +1180,13 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
 
             if (memcmp(msg, _recv_buf, msglen) != 0)
             {
-                err = ESP8266AT_ERR_ERROR;
+                err = UBI_ST_ERR;
                 break;
             }
 
             printf("\"%s\"\n", (char*) _recv_buf);
         }
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             r = -1;
             break;
@@ -1194,7 +1194,7 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
 
         printf("\n==== Close connection ====\n\n");
         err = esp8266at_cmd_at_cipclose(esp8266at, _timeoutms, NULL);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             r = -1;
             break;
@@ -1202,7 +1202,7 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
 
         printf("\n==== Quit from the AP ====\n\n");
         err = esp8266at_cmd_at_cwqap(esp8266at, _timeoutms, NULL);
-        if (err != ESP8266AT_ERR_OK)
+        if (err != UBI_ST_OK)
         {
             r = -1;
             break;
@@ -1212,7 +1212,7 @@ int esp8266at_cli_echo_client(esp8266at_t *esp8266at, char *str, int len, void *
         break;
     } while (1);
 
-    if (err != ESP8266AT_ERR_OK)
+    if (err != UBI_ST_OK)
     {
         read = 0;
         esp8266at_io_read_timedms(esp8266at, _recv_buf, ESP8266AT_RECV_BUFFER_SIZE, &read, _timeoutms, NULL);

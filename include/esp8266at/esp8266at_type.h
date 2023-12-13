@@ -70,16 +70,6 @@ extern "C"
 
 typedef enum
 {
-    ESP8266AT_ERR_OK = 0,
-    ESP8266AT_ERR_ERROR,
-    ESP8266AT_ERR_TIMEOUT,
-    ESP8266AT_ERR_BUSY,
-    ESP8266AT_ERR_IO_ERROR,
-    ESP8266AT_ERR_IO_OVERFLOW,
-} esp8266at_err_t;
-
-typedef enum
-{
     ESP8266AT_IO_RX_MODE_RESP = 0,
     ESP8266AT_IO_RX_MODE_DATA_LEN,
     ESP8266AT_IO_RX_MODE_DATA,
@@ -156,6 +146,15 @@ typedef struct _esp8266at_t
     uint32_t io_mqtt_key_i;
     uint32_t io_mqtt_topic_i;
 } esp8266at_t;
+
+/* Deprecated */
+#define esp8266at_err_t ubi_st_t
+#define ESP8266AT_ERR_OK                UBI_ST_OK
+#define ESP8266AT_ERR_ERROR             UBI_ST_ERR
+#define ESP8266AT_ERR_TIMEOUT           UBI_ST_TIMEOUT
+#define ESP8266AT_ERR_BUSY              UBI_ST_BUSY
+#define ESP8266AT_ERR_IO_ERROR          UBI_ST_ERR_IO
+#define ESP8266AT_ERR_IO_OVERFLOW       UBI_ST_ERR_OVERFLOW
 
 #ifdef __cplusplus
 }
