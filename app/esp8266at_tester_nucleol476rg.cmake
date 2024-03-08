@@ -16,8 +16,8 @@ set_cache(STM32CUBEL4__DTTY_STM32_UART_ENABLE TRUE BOOL)
 set_cache(UBINOS__BSP__STM32_DTTY_USARTx_INSTANCE_NUMBER "3" STRING)
 
 include(${PROJECT_UBINOS_DIR}/config/ubinos_nucleol476rg.cmake)
-include(${PROJECT_LIBRARY_DIR}/stm32cubel4_wrapper/config/stm32cubel4.cmake)
-include(${PROJECT_LIBRARY_DIR}/stm32cubel4_extension/config/stm32cubel4_extension.cmake)
+include(${PROJECT_LIBRARY_DIR}/STM32CubeL4_wrapper/config/stm32cubel4.cmake)
+include(${PROJECT_LIBRARY_DIR}/STM32CubeL4_extension/config/stm32cubel4_extension.cmake)
 include(${PROJECT_LIBRARY_DIR}/esp8266at/config/esp8266at.cmake)
 
 ####
